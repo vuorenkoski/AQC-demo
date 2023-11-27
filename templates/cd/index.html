@@ -1,0 +1,76 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+    <title>Community detection</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+
+    <link rel="stylesheet" type="text/css" href="{% static 'styles.css' %}">
+    </head>
+
+    <body>
+    
+        <div class="container-fluid">    
+            <div class="row content">
+                <div class="col-sm-12">    
+                    <div class="data-content">
+                        <h1>Community detection - demo</h1>
+                        <p>This demo run community detection algorithm with D-Wave leap heuristic local solver.</p>
+                        <br>
+                    </div>
+                </div>
+            </div>
+            <div class="row content">
+                <div class="col-sm-3">    
+                    <h2>Graph parameters</h2>
+                    <form action="" method="POST">
+                        {% csrf_token %} 
+                        <select class="form-select" id="solver" name="solver">
+                        {% for s in solvers %}
+                            {% if s == solver %}
+                                <option value="{{ s }}" selected="selected">{{ s }}</option>
+                            {% else %}
+                                <option value="{{ s }}">{{ s }}</option>
+                            {% endif %}
+                        {% endfor %}
+                        </select>
+                        <label for="seed">Seed</label>
+                        <input type="number" class="form-control" id="seed" name="seed" value={{seed}}>
+                        <label for="size">Vertices</label>
+                        <input type="number" class="form-control" id="size" name="size" value={{vertices}}>
+                        <label for="communities">Communities</label>
+                        <input type="number" class="form-control" id="communities" name="communities" value={{communities}}>
+                        <label for="max_weight">max_weight</label>
+                        <input type="number" class="form-control" id="max_weight" name="max_weight" value={{max_weight}}>
+                        <br>
+                        <input class="btn btn-primary" type="submit" value="Run algorithm">
+                    </form>
+                    <hr>
+                    {% if time %}
+                        <p>Running time: {{time}} ms</p>    
+                    {% endif %}
+                    {% if energy %}
+                        <p>Lowest energy level: {{energy}}</p>    
+                    {% endif %}
+                </div>
+                <div class="col-sm-9">    
+                    {% if graph %}
+                        <img src="data:image/png;base64, {{graph|safe}}" alt="" id="img">
+                    {% endif %}
+                </div>
+            </div>
+            <hr>
+            <div class="container-fluid">
+                <div class="row">
+                    <footer class="py-4 text-center">
+                        <p>Lauri Vuorenkoski, 2023</p>
+                    </footer>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
