@@ -10,12 +10,11 @@ from dwave.system import DWaveSampler, EmbeddingComposite, LeapHybridSampler
 from dwave.samplers import SimulatedAnnealingSampler
 import dwave.inspector
 import networkx as nx
-from networkx.classes.function import path_weight
 from io import BytesIO
 import base64
 
 colors=['gray', 'blue','red','green','magenta','yellow','purple','black']
-solvers=['local heuristic solver', 'cloud hybrid solver']
+solvers=['local heuristic solver', 'cloud hybrid solver', 'quantum solver']
 
 def index(request):
     fig_size = 6
@@ -24,10 +23,19 @@ def index(request):
         seed = int(request.POST['seed'])
         communities = int(request.POST['communities'])
         max_weight = int(request.POST['max_weight'])
+        num_reads = int(request.POST['reads'])
         solver = request.POST['solver']
+        token = request.POST['token']
+
+        if size<1 or size>150:
+            return render(request, 'cd/index.html', {'seed':seed, 'vertices':size, 'communities':communities, 'max_weight':max_weight, 'token':token,
+                                                     'solvers':solvers, 'solver':solver, 'reads':num_reads, 'error': 'vertices must be 1..150'}) 
+        if communities<1 or communities>7:
+            return render(request, 'cd/index.html', {'seed':seed, 'vertices':size, 'communities':communities, 'max_weight':max_weight, 'token':token,
+                                                     'solvers':solvers, 'solver':solver, 'reads':num_reads, 'error': 'communities must be 1..7'}) 
 
         random.seed(seed)
-        G = nx.random_geometric_graph(size, 0.2, seed=seed)
+        G = nx.random_geometric_graph(size, 0.3, seed=seed)
         nx.set_edge_attributes(G, {e: {'weight': random.randint(1, max_weight)} for e in G.edges})
 
         max_count = 0
@@ -38,29 +46,49 @@ def index(request):
         for i in range(len(G.nodes)):
             for j in range(communities):
                 labels[i*communities + j]=(i,j)
-                
-        Q = create_qubo(G, communities, max_count)
-        bqm = dimod.BinaryQuadraticModel(Q, 'BINARY')
-        bqm = bqm.relabel_variables(labels, inplace=False) 
 
-        num_reads = 1000
-        ts = time.time()
-        sampleset = SimulatedAnnealingSampler().sample(bqm, num_reads=num_reads)
-        energy = int(sampleset.first.energy)
-        det_time = int((time.time()-ts)*1000)
+        Q = create_qubo(G, communities, max_count)
+        bqm = dimod.BinaryQuadraticModel(Q, 'BINARY').relabel_variables(labels, inplace=False) 
+        result = {}
+        result['edges'] = len(G.edges)
+        result['vertices'] = len(G.nodes)
+        result['qubo_size'] = Q.shape[0]
+        result['logical_qubits'] = Q.shape[0]  
+        result['couplers'] = len(bqm.quadratic)
+        if solver=='local heuristic solver':
+            ts = time.time()
+            sampleset = SimulatedAnnealingSampler().sample(bqm, num_reads=num_reads).aggregate()
+            result['time'] = int((time.time()-ts)*1000)
+        elif solver=='cloud hybrid solver':
+            try:
+                sampleset = LeapHybridSampler(token=token).sample(bqm).aggregate()
+            except:
+                return render(request, 'cd/index.html', {'seed':seed, 'vertices':size, 'communities':communities, 'max_weight':max_weight, 'token':token,
+                                                     'solvers':solvers, 'solver':solver, 'reads':num_reads, 'error': 'Solver, is token ok?'}) 
+            result['time'] = int(sampleset.info['qpu_access_time'] / 1000)
+        elif solver=='quantum solver':
+            machine = DWaveSampler(token=token)
+            result['chipset'] = machine.properties['chip_id']
+            sampleset = EmbeddingComposite(machine).sample(bqm, num_reads=num_reads).aggregate()
+            result['time'] = int(sampleset.info['timing']['qpu_access_time'] / 1000)
+            result['physical_qubits'] = sum(len(x) for x in sampleset.info['embedding_context']['embedding'].values())
+            result['chainb'] = sampleset.first.chain_break_fraction
+        result['energy'] = int(sampleset.first.energy)
+        result['occurences'] = int(sampleset.first.num_occurrences)
         nc = result_to_colors(G,sampleset.first.sample)
         graph = print_graph(G, node_color=nc, fig_size=fig_size)
     else:
         solver = 'local heuristic solver'
+        token = ''
         size = 20
         seed = 42
         communities = 4
         max_weight = 10
+        num_reads = 1000
         graph = None
-        det_time = None
-        energy = None
-    return render(request, 'cd/index.html', {'graph':graph, 'time':det_time, 'seed':seed, 'vertices':size, 
-                  'communities':communities, 'max_weight':max_weight, 'energy':energy, 'solvers':solvers, 'solver':solver}) 
+        result = {}
+    return render(request, 'cd/index.html', {'graph':graph, 'result':result, 'seed':seed, 'vertices':size, 'token':token,
+                  'communities':communities, 'max_weight':max_weight, 'solvers':solvers, 'solver':solver, 'reads':num_reads}) 
 
 def create_qubo(G, communities, p):
     vertices = len(G.nodes)
@@ -114,8 +142,6 @@ def print_graph(G, pos=None, node_color=None, fig_size=6):
     buffer.close()
     return graph
 
-colors=['gray', 'blue','red','green','magenta','yellow','purple','black']
-
 def result_to_colors(G, sample):
     cs = np.zeros(len(G.nodes))
     for k,v in sample.items():
@@ -125,42 +151,3 @@ def result_to_colors(G, sample):
     for i in range(len(cs)):
         nc.append(colors[int(cs[i])])
     return nc
-
-def solve_random_graph(seed, size=50, communities=4, fig_size=6):
-    max_weight = 10
-    random.seed(seed)
-    G = nx.random_geometric_graph(size, 0.3, seed=seed)
-    nx.set_edge_attributes(G, {e: {'weight': random.randint(1, max_weight)} for e in G.edges})
-    
-    max_count = 0
-    for e in G.edges:
-        max_count += G[e[0]][e[1]]['weight']
-
-    labels = {}
-    for i in range(len(G.nodes)):
-        for j in range(communities):
-            labels[i*communities + j]=(i,j)
-            
-    Q = create_qubo(G, communities, max_count)
-    bqm = dimod.BinaryQuadraticModel(Q, 'BINARY')
-    bqm = bqm.relabel_variables(labels, inplace=False) 
-    
-    print('\nNumber of logical qubits needed:',Q.shape[0])
-    print('Number of couplers needed:', len(bqm.quadratic))
-    print('\nSimulator solver')
-    num_reads = 1000
-    ts = time.time()
-    sampleset = SimulatedAnnealingSampler().sample(bqm, num_reads=num_reads)
-    det_time = (time.time()-ts)*1000
-    print('Time used (ms): {:.3f}\n'.format(det_time))
-    nc = result_to_colors(G,sampleset.first.sample)
-    print_graph(G, node_color=nc, fig_size=fig_size)
-    
-    print('Hybrid solver')
-    sampleset = LeapHybridSampler().sample(bqm)
-    hyb_time = sampleset.info['qpu_access_time'] / 1000
-    run_time = sampleset.info['run_time'] / 1000
-    print('QPU time used (ms): {:.1f}'.format(hyb_time))
-    print('Total time used (ms): {:.1f}\n'.format(run_time))
-    nc = result_to_colors(G,sampleset.first.sample)
-    print_graph(G, node_color=nc)
