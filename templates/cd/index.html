@@ -13,25 +13,27 @@
     <body>
     
         <div class="container-fluid">    
-            <div class="row content">
-                <div class="col-sm-1">
+            <div class="row content bg-primary">
+                <div class="col-sm-1 bg-primary">
                 </div>
                 <div class="col-sm-11">
-                    <div class="row content">
-                        <div class="col-sm-8">    
-                            <div class="data-content">
-                                <h1>Community detection - demo</h1>
-                                <p>This demo runs community detection algorithm with D-Wave leap heuristic local solver, hybrid solver in the cloud and quantum solver. 
-                                    Beware, quantum solver can have long waiting-time to run if many qubits are needed.</p>
-                                    <p>Gray vertices are not mapped to any community.</p>
-                                    <p>Solver API token is needed if hybrid solver or quantum solver are used.</p>
-                            </div>
+                    <div class="row content bg-primary p-2">
+                        <div class="col-sm-12">    
+                            <h1>Community detection - demo</h1>
                         </div>
                     </div>
-                    <div class="row content">
-                        <div class="col-sm-4">    
+                    <div class="row content m-2">
+                        <div class="col-sm-9 bg-white rounded-top">    
+                            <p>This demo runs community detection algorithm with D-Wave leap heuristic local solver, hybrid solver in the cloud and quantum solver. 
+                                Beware, quantum solver can have long waiting-time to run if many qubits are needed.</p>
+                            <p>Gray vertices are not mapped to any community.</p>
+                            <p>Solver API token is needed if hybrid solver or quantum solver are used.</p>
+                        </div>
+                    </div>
+                    <div class="row content m-2">
+                        <div class="col-sm-4 bg-white">    
 
-                            <h2>Random graph and parameters</h2>
+                            <h2>Solver and graph parameters</h2>
                             <form action="" method="POST" id="paramsForm">
                                 {% csrf_token %} 
                                 <div class="row">
@@ -110,17 +112,17 @@
                                         <p id ="run-message"></p>
                                     </div>
                                 </div>
+                                <br>
                             </form>
                         </div>
-                        <div class="col-sm-8">    
+                        <div class="col-sm-6">    
                             {% if graph %}
                                 <img src="data:image/png;base64, {{graph|safe}}" alt="" id="img">
                             {% endif %}
                         </div>
-                        <div class="col-sm-8">    
                     </div>                    
-                    <div class="row content">
-                        <div class="col-sm-4">   
+                    <div class="row content m-2">
+                        <div class="col-sm-4 bg-white">   
                             {% if result %}
                             <table class="table table-striped">
                                 <thead>
@@ -206,18 +208,11 @@
                             <img src="data:image/png;base64, {{histogram|safe}}" alt="" id="img">
                             {% endif %}
                         </div>
-                        <div class="col-sm-8">    
-
-                        </div>
                     </div>
-                    <br>
-                    <hr>
-                    <div class="container-fluid">
-                        <div class="row">
-                            <footer class="py-4 text-center">
-                                <p>Lauri Vuorenkoski, 2023</p>
-                            </footer>
-                        </div>
+                    <div class="row bg-primary">
+                        <footer class="py-4 text-center">
+                            <p>Lauri Vuorenkoski, 2023</p>
+                        </footer>
                     </div>
                 </div>
             </div>
