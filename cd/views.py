@@ -17,7 +17,6 @@ colors=['gray', 'blue','red','green','magenta','yellow','purple','black']
 solvers=['local heuristic solver', 'cloud hybrid solver', 'quantum solver']
 
 def index(request):
-    fig_size = 6
     if request.method == "POST":
         size = int(request.POST['size'])
         seed = int(request.POST['seed'])
@@ -76,7 +75,8 @@ def index(request):
         result['energy'] = int(sampleset.first.energy)
         result['occurences'] = int(sampleset.first.num_occurrences)
         nc = result_to_colors(G,sampleset.first.sample)
-        graph = print_graph(G, node_color=nc, fig_size=fig_size)
+        graph = print_graph(G, node_color=nc, fig_size=5)
+        hist = print_histogram(sampleset, fig_size=5)
     else:
         solver = 'local heuristic solver'
         token = ''
@@ -86,9 +86,10 @@ def index(request):
         max_weight = 10
         num_reads = 1000
         graph = None
+        hist = None
         result = {}
     return render(request, 'cd/index.html', {'graph':graph, 'result':result, 'seed':seed, 'vertices':size, 'token':token,
-                  'communities':communities, 'max_weight':max_weight, 'solvers':solvers, 'solver':solver, 'reads':num_reads}) 
+                  'communities':communities, 'max_weight':max_weight, 'solvers':solvers, 'solver':solver, 'reads':num_reads, 'histogram':hist}) 
 
 def create_qubo(G, communities, p):
     vertices = len(G.nodes)
@@ -133,6 +134,42 @@ def print_graph(G, pos=None, node_color=None, fig_size=6):
     nx.draw_networkx_nodes(G, pos, node_size=80, node_color=node_color)
     plt.axis("off")
     
+    buffer = BytesIO()
+    plt.savefig(buffer, format='png')
+    buffer.seek(0)
+    image_png = buffer.getvalue()
+    graph = base64.b64encode(image_png)
+    graph = graph.decode('utf-8')
+    buffer.close()
+    return graph
+
+def print_histogram(sampleset, fig_size=6):
+    data = {}
+    maxv = int(sampleset.first.energy)
+    minv = int(sampleset.first.energy)
+    for e,n in sampleset.data(fields=['energy','num_occurrences']):
+        energy = int(e)
+        minv = min(energy,minv)
+        maxv = max(energy,maxv)
+        if energy in data.keys():
+            data[energy] += n
+        else:
+            data[energy] = n
+    labels = []
+    datap = []
+    for i in range(minv,maxv):
+        labels.append(i)
+        if i in data.keys():
+            datap.append(data[i])
+        else:
+            datap.append(0)
+
+    plt.switch_backend('AGG')
+    plt.figure(figsize=(fig_size, fig_size))
+    plt.bar(labels,datap)
+    plt.xlabel('Energy')
+    plt.ylabel('Occcurrences')
+
     buffer = BytesIO()
     plt.savefig(buffer, format='png')
     buffer.seek(0)

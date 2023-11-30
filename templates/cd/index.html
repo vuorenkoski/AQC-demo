@@ -18,25 +18,19 @@
                 </div>
                 <div class="col-sm-11">
                     <div class="row content">
-                        <div class="col-sm-12">    
+                        <div class="col-sm-8">    
                             <div class="data-content">
                                 <h1>Community detection - demo</h1>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row content">
-                        <div class="col-sm-6">    
-                            <div class="data-content">
                                 <p>This demo runs community detection algorithm with D-Wave leap heuristic local solver, hybrid solver in the cloud and quantum solver. 
                                     Beware, quantum solver can have long waiting-time to run if many qubits are needed.</p>
                                     <p>Gray vertices are not mapped to any community.</p>
                                     <p>Solver API token is needed if hybrid solver or quantum solver are used.</p>
-                                <br>
                             </div>
                         </div>
                     </div>
                     <div class="row content">
                         <div class="col-sm-4">    
+
                             <h2>Random graph and parameters</h2>
                             <form action="" method="POST" id="paramsForm">
                                 {% csrf_token %} 
@@ -117,8 +111,17 @@
                                     </div>
                                 </div>
                             </form>
+                        </div>
+                        <div class="col-sm-8">    
+                            {% if graph %}
+                                <img src="data:image/png;base64, {{graph|safe}}" alt="" id="img">
+                            {% endif %}
+                        </div>
+                        <div class="col-sm-8">    
+                    </div>                    
+                    <div class="row content">
+                        <div class="col-sm-4">   
                             {% if result %}
-                            <hr>
                             <table class="table table-striped">
                                 <thead>
                                     <tr>
@@ -199,11 +202,15 @@
                             {% endif %}
                         </div>
                         <div class="col-sm-8">    
-                            {% if graph %}
-                                <img src="data:image/png;base64, {{graph|safe}}" alt="" id="img">
+                            {% if histogram %}
+                            <img src="data:image/png;base64, {{histogram|safe}}" alt="" id="img">
                             {% endif %}
                         </div>
+                        <div class="col-sm-8">    
+
+                        </div>
                     </div>
+                    <br>
                     <hr>
                     <div class="container-fluid">
                         <div class="row">
