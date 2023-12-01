@@ -13,46 +13,56 @@ import networkx as nx
 from io import BytesIO
 import base64
 
-colors=['gray', 'blue','red','green','magenta','yellow','purple','black']
-solvers=['local heuristic solver', 'cloud hybrid solver', 'quantum solver']
+solvers = ['local heuristic solver', 'cloud hybrid solver', 'quantum solver']
+gtypes = ['identical', 'permuted', 'non-isomorphic']
 
 def index(request):
     if request.method == "POST":
         size = int(request.POST['size'])
         seed = int(request.POST['seed'])
-        communities = int(request.POST['communities'])
-        max_weight = int(request.POST['max_weight'])
+        gtype = request.POST['type']
         num_reads = int(request.POST['reads'])
         solver = request.POST['solver']
         token = request.POST['token']
 
-        if size<1 or size>150:
-            return render(request, 'cd/index.html', {'seed':seed, 'vertices':size, 'communities':communities, 'max_weight':max_weight, 'token':token,
-                                                     'solvers':solvers, 'solver':solver, 'reads':num_reads, 'error': 'vertices must be 1..150'}) 
-        if communities<1 or communities>7:
-            return render(request, 'cd/index.html', {'seed':seed, 'vertices':size, 'communities':communities, 'max_weight':max_weight, 'token':token,
-                                                     'solvers':solvers, 'solver':solver, 'reads':num_reads, 'error': 'communities must be 1..7'}) 
+        if size<1 or size>50:
+            return render(request, 'cd/index.html', {'seed':seed, 'vertices':size, 'types':gtypes, 'type':gtype, 'token':token,
+                                                     'solvers':solvers, 'solver':solver, 'reads':num_reads, 'error': 'vertices must be 1..50'}) 
 
         random.seed(seed)
-        G = nx.random_geometric_graph(size, 0.3, seed=seed)
-        nx.set_edge_attributes(G, {e: {'weight': random.randint(1, max_weight)} for e in G.edges})
-
-        max_count = 0
-        for e in G.edges:
-            max_count += G[e[0]][e[1]]['weight']
+        G1 = nx.random_geometric_graph(size, 0.7, seed=seed)
+        E1 = [] 
+        E2 = [] 
+        for e in G1.edges(data=True):
+            E1.append((e[0],e[1]))
+        p=len(E1)
+        if gtype=='identical':
+            G2 = G1
+            for e in G1.edges(data=True):
+                E2.append((e[0],e[1]))
+        elif gtype=='permuted':
+            mapping = dict(zip(G1.nodes(), sorted(G1.nodes(), key=lambda k: random.random())))
+            G2 = nx.relabel_nodes(G1, mapping)
+            for e in G2.edges(data=True):
+                E2.append((e[0],e[1]))
+        elif gtype=='non-isomorphic':
+            G2 = nx.random_geometric_graph(size, 0.7, seed=seed+1) 
+            for e in G2.edges(data=True):
+                E2.append((e[0],e[1]))
 
         labels = {}
-        for i in range(len(G.nodes)):
-            for j in range(communities):
-                labels[i*communities + j]=(i,j)
+        for i in range(size):
+            for j in range(size):
+                labels[i*size+j] = (i,j)
 
-        Q = create_qubo(G, communities, max_count)
+        Q = create_qubo(E1, E2, size, p)
         bqm = dimod.BinaryQuadraticModel(Q, 'BINARY').relabel_variables(labels, inplace=False) 
         result = {}
-        result['edges'] = len(G.edges)
-        result['vertices'] = len(G.nodes)
+        result['edges'] = len(G1.edges)
+        result['vertices'] = len(G1.nodes)
         result['qubo_size'] = Q.shape[0]
-        result['logical_qubits'] = Q.shape[0]  
+        result['logical_qubits'] = Q.shape[0]
+        result['exp_energy'] = -len(E1)
         result['couplers'] = len(bqm.quadratic)
         if solver=='local heuristic solver':
             ts = time.time()
@@ -64,7 +74,7 @@ def index(request):
             try:
                 sampleset = LeapHybridSampler(token=token).sample(bqm).aggregate()
             except:
-                return render(request, 'cd/index.html', {'seed':seed, 'vertices':size, 'communities':communities, 'max_weight':max_weight, 'token':token,
+                return render(request, 'cd/index.html', {'seed':seed, 'vertices':size, 'types':gtypes, 'type':gtype, 'token':token,
                                                      'solvers':solvers, 'solver':solver, 'reads':num_reads, 'error': 'Solver, is token ok?'}) 
             result['time'] = int(sampleset.info['qpu_access_time'] / 1000)
             hist = None
@@ -72,7 +82,7 @@ def index(request):
             try:
                 machine = DWaveSampler(token=token)
             except:
-                return render(request, 'cd/index.html', {'seed':seed, 'vertices':size, 'communities':communities, 'max_weight':max_weight, 'token':token,
+                return render(request, 'cd/index.html', {'seed':seed, 'vertices':size, 'types':gtypes, 'type':gtype, 'token':token,
                                                      'solvers':solvers, 'solver':solver, 'reads':num_reads, 'error': 'Solver, is token ok?'}) 
             result['chipset'] = machine.properties['chip_id']
             sampleset = EmbeddingComposite(machine).sample(bqm, num_reads=num_reads).aggregate()
@@ -82,64 +92,63 @@ def index(request):
             hist = print_histogram(sampleset, fig_size=5)
             result['occurences'] = int(sampleset.first.num_occurrences)
         result['energy'] = int(sampleset.first.energy)
-        nc = result_to_colors(G,sampleset.first.sample)
-        graph = print_graph(G, node_color=nc, fig_size=5)
+        if result['exp_energy']==result['energy']:
+            result['result']='isomorphic'
+        else:
+            result['result']='non-isomorphic'
+        graph1 = print_graph(G1, fig_size=4)
+        graph2 = print_graph(G2, fig_size=4)
     else:
         solver = 'local heuristic solver'
+        gtype = 'identical'
         token = ''
-        size = 20
+        size = 7
         seed = 42
-        communities = 4
-        max_weight = 10
         num_reads = 1000
-        graph = None
+        graph1 = None
+        graph2 = None
         hist = None
         result = {}
-    return render(request, 'cd/index.html', {'graph':graph, 'result':result, 'seed':seed, 'vertices':size, 'token':token,
-                  'communities':communities, 'max_weight':max_weight, 'solvers':solvers, 'solver':solver, 'reads':num_reads, 'histogram':hist}) 
+    return render(request, 'gi/index.html', {'graph1':graph1, 'graph2':graph2, 'result':result, 'seed':seed, 'vertices':size, 'token':token,
+                  'type':gtype, 'types':gtypes, 'solvers':solvers, 'solver':solver, 'reads':num_reads, 'histogram':hist}) 
 
-def create_qubo(G, communities, p):
-    vertices = len(G.nodes)
-    Q = np.zeros((vertices*communities, vertices*communities))
+def create_qubo(E1,E2,vertices,p):
+    Q = np.zeros((vertices*vertices, vertices*vertices))
     
-    # Helper datastructure to containt k
-    k = np.zeros(vertices)
-    for e in G.edges:
-        k[e[0]] += G[e[0]][e[1]]['weight']
-        k[e[1]] += G[e[0]][e[1]]['weight']
+    # Constraint 1: penalty if several mappings from same source
+    for i in range(vertices): 
+        for j in range(vertices): 
+            for k in range(j+1,vertices): 
+                Q[i*vertices+j,i*vertices+k]=p 
 
-    # Constraint 1
-    for v in range(vertices): 
-        for c1 in range(communities): 
-            for c2 in range(communities):
-                if  c1!=c2:
-                    Q[v*communities+c1,v*communities+c2] += p
+    # Constaint 2: penalty if several mappings to same target
+    for i in range(vertices): 
+        for j in range(vertices): 
+            for k in range(j+1,vertices): 
+                Q[i+vertices*j,i+vertices*k]=p 
                 
-    # Constraint 2
-    for c in range(communities):
-        for v1 in range(vertices): 
-            for v2 in range(v1+1,vertices): 
-                Q[v1*communities+c, v2*communities+c] += k[v1]*k[v2] / (2*p)
-                
-    for e in G.edges:
-        for c in range(communities):
-            Q[e[0]*communities+c, e[1]*communities+c] -= G[e[0]][e[1]]['weight']
+    # Constraint 3: -1 for each succesfully mapped edge: (x1,y1) -> (x2,y2) 
+    #    two possible mappings: (x1->x2, y1->y2) or (x1->y2,y1->x2)
+    for e1 in E1: 
+        for e2 in E2: 
+            Q[e1[0]*vertices+e2[0], e1[1]*vertices+e2[1]] -= 1
+            Q[e1[0]*vertices+e2[1], e1[1]*vertices+e2[0]] -= 1
             
+    # All quadratic coefficients in lower triangle to upper triangle
+    for i in range(vertices): 
+        for j in range(i):
+            Q[j,i] += Q[i,j]
+            Q[i,j] = 0
     return Q
 
-def print_graph(G, pos=None, node_color=None, fig_size=6):
-    if pos==None:
-        pos = nx.get_node_attributes(G, 'pos')
-    m = 0
-    for k,v in nx.get_edge_attributes(G, 'weight').items():
-        m = max(m,v)
-    a = [v/m for k,v in nx.get_edge_attributes(G, 'weight').items()]
-
+def print_graph(G, fig_size=6):
     plt.switch_backend('AGG')
+    pos = nx.spring_layout(G)
     plt.figure(figsize=(fig_size, fig_size))
-    nx.draw_networkx_edges(G, pos, alpha=a)
-    nx.draw_networkx_nodes(G, pos, node_size=80, node_color=node_color)
+    nx.draw_networkx_edges(G, pos)
+    nx.draw_networkx_nodes(G, pos, node_size=80)
     plt.axis("off")
+    plt.show()
     
     buffer = BytesIO()
     plt.savefig(buffer, format='png')
@@ -185,13 +194,3 @@ def print_histogram(sampleset, fig_size=6):
     graph = graph.decode('utf-8')
     buffer.close()
     return graph
-
-def result_to_colors(G, sample):
-    cs = np.zeros(len(G.nodes))
-    for k,v in sample.items():
-        if v==1: 
-            cs[k[0]]=k[1]+1
-    nc = []
-    for i in range(len(cs)):
-        nc.append(colors[int(cs[i])])
-    return nc
