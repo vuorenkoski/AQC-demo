@@ -14,7 +14,7 @@ from io import BytesIO
 import base64
 
 solvers = ['local heuristic solver', 'cloud hybrid solver', 'quantum solver']
-gtypes = ['identical', 'permuted', 'non-isomorphic']
+gtypes = ['identical', 'permuted', 'random']
 
 def index(request):
     if request.method == "POST":
@@ -26,11 +26,11 @@ def index(request):
         token = request.POST['token']
 
         if size<1 or size>50:
-            return render(request, 'cd/index.html', {'seed':seed, 'vertices':size, 'types':gtypes, 'type':gtype, 'token':token,
+            return render(request, 'gi/index.html', {'seed':seed, 'vertices':size, 'types':gtypes, 'type':gtype, 'token':token,
                                                      'solvers':solvers, 'solver':solver, 'reads':num_reads, 'error': 'vertices must be 1..50'}) 
 
         random.seed(seed)
-        G1 = nx.random_geometric_graph(size, 0.7, seed=seed)
+        G1 = nx.random_geometric_graph(size, 0.5, seed=seed)
         E1 = [] 
         E2 = [] 
         for e in G1.edges(data=True):
@@ -45,8 +45,12 @@ def index(request):
             G2 = nx.relabel_nodes(G1, mapping)
             for e in G2.edges(data=True):
                 E2.append((e[0],e[1]))
-        elif gtype=='non-isomorphic':
-            G2 = nx.random_geometric_graph(size, 0.7, seed=seed+1) 
+        elif gtype=='random':
+            i = 1
+            G2 = nx.random_geometric_graph(size, 0.5, seed=seed+i) 
+            while len(G2.edges)!=len(G1.edges):
+                i += 1
+                G2 = nx.random_geometric_graph(size, 0.5, seed=seed+i) 
             for e in G2.edges(data=True):
                 E2.append((e[0],e[1]))
 
@@ -73,25 +77,26 @@ def index(request):
         elif solver=='cloud hybrid solver':
             try:
                 sampleset = LeapHybridSampler(token=token).sample(bqm).aggregate()
-            except:
-                return render(request, 'cd/index.html', {'seed':seed, 'vertices':size, 'types':gtypes, 'type':gtype, 'token':token,
-                                                     'solvers':solvers, 'solver':solver, 'reads':num_reads, 'error': 'Solver, is token ok?'}) 
+            except Exception as err:
+                return render(request, 'gi/index.html', {'seed':seed, 'vertices':size, 'types':gtypes, 'type':gtype, 'token':token,
+                                                     'solvers':solvers, 'solver':solver, 'reads':num_reads, 'error': err}) 
             result['time'] = int(sampleset.info['qpu_access_time'] / 1000)
             hist = None
         elif solver=='quantum solver':
             try:
                 machine = DWaveSampler(token=token)
-            except:
-                return render(request, 'cd/index.html', {'seed':seed, 'vertices':size, 'types':gtypes, 'type':gtype, 'token':token,
-                                                     'solvers':solvers, 'solver':solver, 'reads':num_reads, 'error': 'Solver, is token ok?'}) 
-            result['chipset'] = machine.properties['chip_id']
-            sampleset = EmbeddingComposite(machine).sample(bqm, num_reads=num_reads).aggregate()
+                result['chipset'] = machine.properties['chip_id']
+                sampleset = EmbeddingComposite(machine).sample(bqm, num_reads=num_reads).aggregate()
+            except Exception as err:
+                return render(request, 'gi/index.html', {'seed':seed, 'vertices':size, 'types':gtypes, 'type':gtype, 'token':token,
+                                                     'solvers':solvers, 'solver':solver, 'reads':num_reads, 'error': err}) 
             result['time'] = int(sampleset.info['timing']['qpu_access_time'] / 1000)
             result['physical_qubits'] = sum(len(x) for x in sampleset.info['embedding_context']['embedding'].values())
             result['chainb'] = sampleset.first.chain_break_fraction
             hist = print_histogram(sampleset, fig_size=5)
             result['occurences'] = int(sampleset.first.num_occurrences)
         result['energy'] = int(sampleset.first.energy)
+        print(solver)
         if result['exp_energy']==result['energy']:
             result['result']='isomorphic'
         else:

@@ -63,19 +63,19 @@ def index(request):
         elif solver=='cloud hybrid solver':
             try:
                 sampleset = LeapHybridSampler(token=token).sample(bqm).aggregate()
-            except:
+            except Exception as err:
                 return render(request, 'cd/index.html', {'seed':seed, 'vertices':size, 'communities':communities, 'max_weight':max_weight, 'token':token,
-                                                     'solvers':solvers, 'solver':solver, 'reads':num_reads, 'error': 'Solver, is token ok?'}) 
+                                                     'solvers':solvers, 'solver':solver, 'reads':num_reads, 'error': err}) 
             result['time'] = int(sampleset.info['qpu_access_time'] / 1000)
             hist = None
         elif solver=='quantum solver':
             try:
                 machine = DWaveSampler(token=token)
-            except:
+                result['chipset'] = machine.properties['chip_id']
+                sampleset = EmbeddingComposite(machine).sample(bqm, num_reads=num_reads).aggregate()
+            except Exception as err:
                 return render(request, 'cd/index.html', {'seed':seed, 'vertices':size, 'communities':communities, 'max_weight':max_weight, 'token':token,
-                                                     'solvers':solvers, 'solver':solver, 'reads':num_reads, 'error': 'Solver, is token ok?'}) 
-            result['chipset'] = machine.properties['chip_id']
-            sampleset = EmbeddingComposite(machine).sample(bqm, num_reads=num_reads).aggregate()
+                                                     'solvers':solvers, 'solver':solver, 'reads':num_reads, 'error': err}) 
             result['time'] = int(sampleset.info['timing']['qpu_access_time'] / 1000)
             result['physical_qubits'] = sum(len(x) for x in sampleset.info['embedding_context']['embedding'].values())
             result['chainb'] = sampleset.first.chain_break_fraction
