@@ -1,4 +1,6 @@
-# Community detection demo
+# AQC demo
+
+This demo run some graph algorithms with quantum annealer (D-Wave).
 
 Framework: Python/Django/Bootstrap/Gunicorn
 
