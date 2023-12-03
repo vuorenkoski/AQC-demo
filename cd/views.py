@@ -14,7 +14,7 @@ from io import BytesIO
 import base64
 
 colors=['gray', 'blue','red','green','magenta','yellow','purple','black']
-solvers=['local heuristic solver', 'cloud hybrid solver', 'quantum solver']
+solvers=['local simulator', 'cloud hybrid solver', 'quantum solver']
 
 def index(request):
     if request.method == "POST":
@@ -54,7 +54,7 @@ def index(request):
         result['qubo_size'] = Q.shape[0]
         result['logical_qubits'] = Q.shape[0]  
         result['couplers'] = len(bqm.quadratic)
-        if solver=='local heuristic solver':
+        if solver=='local simulator':
             ts = time.time()
             sampleset = SimulatedAnnealingSampler().sample(bqm, num_reads=num_reads).aggregate()
             result['time'] = int((time.time()-ts)*1000)
@@ -85,7 +85,7 @@ def index(request):
         nc = result_to_colors(G,sampleset.first.sample)
         graph = print_graph(G, node_color=nc, fig_size=5)
     else:
-        solver = 'local heuristic solver'
+        solver = 'local simulator'
         token = ''
         size = 20
         seed = 42

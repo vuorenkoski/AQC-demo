@@ -13,7 +13,7 @@ import networkx as nx
 from io import BytesIO
 import base64
 
-solvers = ['local heuristic solver', 'cloud hybrid solver', 'quantum solver']
+solvers = ['local simulator', 'cloud hybrid solver', 'quantum solver']
 gtypes = ['identical', 'permuted', 'random']
 
 def index(request):
@@ -68,7 +68,7 @@ def index(request):
         result['logical_qubits'] = Q.shape[0]
         result['exp_energy'] = -len(E1)
         result['couplers'] = len(bqm.quadratic)
-        if solver=='local heuristic solver':
+        if solver=='local simulator':
             ts = time.time()
             sampleset = SimulatedAnnealingSampler().sample(bqm, num_reads=num_reads).aggregate()
             result['time'] = int((time.time()-ts)*1000)
@@ -104,7 +104,7 @@ def index(request):
         graph1 = print_graph(G1, fig_size=4)
         graph2 = print_graph(G2, fig_size=4)
     else:
-        solver = 'local heuristic solver'
+        solver = 'local simulator'
         gtype = 'identical'
         token = ''
         size = 7

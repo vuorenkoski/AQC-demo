@@ -13,7 +13,7 @@ from io import BytesIO
 import base64
 from networkx.classes.function import path_weight
 
-solvers = ['local heuristic solver', 'quantum solver']
+solvers = ['local simulator', 'quantum solver']
 
 def index(request):
     if request.method == "POST":
@@ -56,7 +56,7 @@ def index(request):
         result['qubo_size'] = Q.shape[0]
         result['logical_qubits'] = Q.shape[0]
         result['couplers'] = len(bqm.quadratic)
-        if solver=='local heuristic solver':
+        if solver=='local simulator':
             ts = time.time()
             sampleset = SimulatedAnnealingSampler().sample(bqm, num_reads=num_reads).aggregate()
             result['time'] = int((time.time()-ts)*1000)
@@ -88,7 +88,7 @@ def index(request):
         for k,v in res.items():
             result['paths'].append({'nodes':k, 'path':str(v[0]), 'weight':v[1]})
     else:
-        solver = 'local heuristic solver'
+        solver = 'local simulator'
         token = ''
         size = 7
         seed = 42
