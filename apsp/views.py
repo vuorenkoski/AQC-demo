@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -11,43 +11,52 @@ from dwave.samplers import SimulatedAnnealingSampler
 import networkx as nx
 from io import BytesIO
 import base64
-from networkx.classes.function import path_weight
 
+from qcdemo.check_result import check_result_apsp, result_paths
+from qcdemo.qubo_functions import create_qubo_apsp
+from qcdemo.graphs import create_graph
+
+min_vertices = 5
+max_vertices = 20
+max_num_reads = 10000
 solvers = ['local simulator', 'quantum solver']
+graph_types = ['path graph', 'star graph', 'cycle graph', 'complete graph', 'tree graph', 'single cycle graph', 
+               'multiple cycle graph', 'bipartite graph', 'wheel graph', 'community graph', 'random graph']
 
 def index(request):
+    resp = {}
+    resp['solvers'] = solvers
+    resp['graph_types'] = graph_types
+    resp['min_vertices'] = min_vertices
+    resp['max_vertices'] = max_vertices
+    resp['max_num_reads'] = max_num_reads
+    resp['data'] = JsonResponse([], safe=False).content.decode('utf-8')
     if request.method == "POST":
-        size = int(request.POST['size'])
-        seed = int(request.POST['seed'])
-        max_weight = int(request.POST['max_weight'])
-        num_reads = int(request.POST['reads'])
-        solver = request.POST['solver']
-        token = request.POST['token']
+        resp['vertices'] = int(request.POST['vertices'])
+        resp['num_reads'] = int(request.POST['num_reads'])
+        resp['solver'] = request.POST['solver']
+        resp['token'] = request.POST['token']
+        resp['graph_type'] = request.POST['graph_type']
 
-        if size<1 or size>20:
-            return render(request, 'apsp/index.html', {'seed':seed, 'vertices':size, 'max_weight':max_weight, 'token':token,
-                                                     'solvers':solvers, 'solver':solver, 'reads':num_reads, 'error': 'vertices must be 1..20'}) 
+        if resp['vertices']<min_vertices or resp['vertices']>max_vertices:
+            resp['error'] = 'vertices must be '+str(min_vertices)+'..'+str(max_vertices)
+            return render(request, 'apsp/index.html', resp) 
 
-        random.seed(seed)
-        G = nx.gnp_random_graph(size, 0.30, seed, directed=True)
-        nx.set_edge_attributes(G, {e: {'weight': random.randint(1, max_weight)} for e in G.edges})
-        E = [] 
-        for e in G.edges(data=True):
-            E.append((e[0],e[1],e[2]['weight']))
+        if resp['num_reads']>max_num_reads:
+            resp['error'] = 'Maximum number fo reads is '+str(max_num_reads)
+            return render(request, 'apsp/index.html', resp) 
 
-        max_count = 0
-        for e in E:
-            max_count += e[2]
-
+        G = create_graph(resp['graph_type'],resp['vertices'], weight=True, directed=True)
+        resp['gdata'] = graph_to_json(G)
         labels = {}
-        for i in range(size):
+        for i in range(resp['vertices']):
             labels[i]='s'+str(i)
-            labels[size+i]='t'+str(i)   
-        for i,e in enumerate(E):
-            labels[size*2+i] = str(e[0]) + '-' + str(e[1])
+            labels[resp['vertices']+i]='t'+str(i)   
+        for i,e in enumerate(G.edges):
+            labels[resp['vertices']*2+i] = str(e[0]) + '-' + str(e[1])
             
         
-        Q = create_qubo(E,size,max_count)
+        Q = create_qubo_apsp(G)
         bqm = dimod.BinaryQuadraticModel(Q, 'BINARY').relabel_variables(labels, inplace=False)
 
         result = {}
@@ -56,121 +65,57 @@ def index(request):
         result['qubo_size'] = Q.shape[0]
         result['logical_qubits'] = Q.shape[0]
         result['couplers'] = len(bqm.quadratic)
-        if solver=='local simulator':
+        if resp['solver'] =='local simulator':
             ts = time.time()
-            sampleset = SimulatedAnnealingSampler().sample(bqm, num_reads=num_reads).aggregate()
+            sampleset = SimulatedAnnealingSampler().sample(bqm, num_reads=resp['num_reads']).aggregate()
             result['time'] = int((time.time()-ts)*1000)
-            hist = print_histogram(sampleset, fig_size=5)
-        elif solver=='cloud hybrid solver':
+            resp['histogram'] = print_histogram(sampleset, fig_size=5)
+        elif resp['solver'] =='cloud hybrid solver':
             try:
-                sampleset = LeapHybridSampler(token=token).sample(bqm).aggregate()
+                sampleset = LeapHybridSampler(token=resp['token']).sample(bqm).aggregate()
+                result['time'] = int(sampleset.info['qpu_access_time'] / 1000)
+                resp['histogram'] = None
             except Exception as err:
-                return render(request, 'apsp/index.html', {'seed':seed, 'vertices':size, 'max_weight':max_weight, 'token':token,
-                                                     'solvers':solvers, 'solver':solver, 'reads':num_reads, 'error': err}) 
-            result['time'] = int(sampleset.info['qpu_access_time'] / 1000)
-            hist = None
-        elif solver=='quantum solver':
+                resp['error'] = err
+                return render(request, 'apsp/index.html', resp) 
+        elif resp['solver'] =='quantum solver':
             try:
-                machine = DWaveSampler(token=token)
+                machine = DWaveSampler(token=resp['token'])
                 result['chipset'] = machine.properties['chip_id']
-                sampleset = EmbeddingComposite(machine).sample(bqm, num_reads=num_reads).aggregate()
+                sampleset = EmbeddingComposite(machine).sample(bqm, num_reads=resp['num_reads']).aggregate()
+                result['time'] = int(sampleset.info['timing']['qpu_access_time'] / 1000)
+                result['physical_qubits'] = sum(len(x) for x in sampleset.info['embedding_context']['embedding'].values())
+                result['chainb'] = sampleset.first.chain_break_fraction
+                resp['histogram'] = print_histogram(sampleset, fig_size=5)
             except Exception as err:
-                return render(request, 'apsp/index.html', {'seed':seed, 'vertices':size, 'max_weight':max_weight, 'token':token,
-                                                     'solvers':solvers, 'solver':solver, 'reads':num_reads, 'error': err}) 
-            result['time'] = int(sampleset.info['timing']['qpu_access_time'] / 1000)
-            result['physical_qubits'] = sum(len(x) for x in sampleset.info['embedding_context']['embedding'].values())
-            result['chainb'] = sampleset.first.chain_break_fraction
-            hist = print_histogram(sampleset, fig_size=5)
+                resp['error'] = err
+                return render(request, 'apsp/index.html', resp) 
         result['energy'] = int(sampleset.first.energy)
-        graph = print_graph(G, fig_size=5)
-        res, result['success'] = check_result(G,sampleset,E,size)
-        result['paths']=[]
-        for k,v in res.items():
+        result['success'] = check_result_apsp(G,sampleset)
+        result['paths'] = []
+        for k,v in result_paths(G,sampleset).items():
             result['paths'].append({'nodes':k, 'path':str(v[0]), 'weight':v[1]})
+        resp['result'] = result
     else:
-        solver = 'local simulator'
-        token = ''
-        size = 7
-        seed = 42
-        max_weight = 10
-        num_reads = 2000
-        graph = None
-        hist = None
-        result = {}
-    return render(request, 'apsp/index.html', {'graph':graph, 'max_weight':max_weight, 'result':result, 'seed':seed, 'vertices':size, 'token':token,
-                  'solvers':solvers, 'solver':solver, 'reads':num_reads, 'histogram':hist}) 
+        resp['vertices'] = 7
+        resp['num_reads'] = 2000
+        resp['solver'] = 'local simulator'
+        resp['token'] = ''
+        resp['graph_type'] = 'wheel graph'
 
-def create_qubo(E,vertices,p):
-    edges = len(E)
-    Q = np.zeros((2*vertices + edges, 2*vertices + edges))
+        resp['graph'] = None
+        resp['histogram'] = None
+        resp['result'] = {}
+    return render(request, 'apsp/index.html', resp) 
 
-    # Constraints 1 and 2
-    for i in range(vertices):
-        for j in range(vertices):
-            if i!=j:
-                Q[i,j] += p
-                Q[vertices+i,j+vertices] += p
-        
-    # Constraint 3
-    for i in range(vertices):
-        Q[i,i+vertices] += p
+def graph_to_json(G):
+    data = []
+    for e in G.edges(data=True):
+        data.append({'source':e[0],'target':e[1],'type':e[2]['weight']})
+#    JsonResponse([{"source":0,"target":1,"type":10}, {"source":0,"target":2,"type":5}], safe=False)
+    return JsonResponse(data, safe=False).content.decode('utf-8')
 
-    # Constraint 4
-    for v in range(vertices):
-        for i,e in enumerate(E):
-            if e[0]==v:
-                Q[v,vertices*2+i] -= p
-            if e[1]==v:
-                Q[v,vertices*2+i] += p
 
-    # Constraint 5
-    for v in range(vertices):
-        for i,e in enumerate(E):
-            if e[1]==v:
-                Q[vertices+v,vertices*2+i] -= p
-            if e[0]==v:
-                Q[vertices+v,vertices*2+i] += p
-
-    # Constraint 6 and 7
-    for i,ei in enumerate(E):
-        for j,ej in enumerate(E):
-            if ei[0]==ej[0] or ei[1]==ej[1]:
-                Q[vertices*2+i,vertices*2+j] += p
-            if ei[1]==ej[0] or ei[0]==ej[1]:
-                Q[vertices*2+i,vertices*2+j] -= p/2
-
-    # Constraint 8 
-    for i in range(edges):
-        Q[vertices*2+i,vertices*2+i] += E[i][2]
-
-    # Quadratic coefficients in lower triangle to upper triangle
-    for i in range(vertices): 
-        for j in range(i):
-            Q[j,i] += Q[i,j]
-            Q[i,j] = 0
-            
-    return Q
-
-def print_graph(G, fig_size=6):
-    plt.switch_backend('AGG')
-    pos = nx.spring_layout(G)
-    plt.figure(figsize=(fig_size, fig_size))
-    nx.draw_networkx_edges(G, pos)
-    nx.draw_networkx_nodes(G, pos)
-    nx.draw_networkx_labels(G, pos, font_color='white')
-    labels = nx.get_edge_attributes(G,'weight')
-    nx.draw_networkx_edge_labels(G,pos,edge_labels=labels)
-    plt.axis("off")
-    plt.show()
-    
-    buffer = BytesIO()
-    plt.savefig(buffer, format='png')
-    buffer.seek(0)
-    image_png = buffer.getvalue()
-    graph = base64.b64encode(image_png)
-    graph = graph.decode('utf-8')
-    buffer.close()
-    return graph
 
 def print_histogram(sampleset, fig_size=6):
     data = {}
@@ -208,52 +153,3 @@ def print_histogram(sampleset, fig_size=6):
     buffer.close()
     return graph
 
-def path_from_sample(sample,E,vertices):
-    s = 0
-    t = 0
-    w = 0
-    for v in range(vertices):
-        if sample['s'+str(v)]==1:
-            s = v
-        if sample['t'+str(v)]==1:
-            t = v
-    i = s
-    path = [i]
-    while i!=t:
-        for e in E:
-            if e[0]==i and sample[str(e[0]) + '-' + str(e[1])]==1:
-                i = e[1]
-                path.append(i)
-                w += e[2]
-    return (str(s)+'-'+str(t),path,w)
-
-def result_info(sampleset, E, vertices):
-    res = {}
-    for s in sampleset.filter(lambda s: s.energy<0):
-        st, path, w = path_from_sample(s,E,vertices)
-        if st not in res:
-            res[st]=(path,w)
-    return res
-
-def check_result(G,sampleset,E,vertices, verbose=False):
-    ok = 0
-    s = 0
-    res = result_info(sampleset,E,vertices)
-    for i in range(vertices):
-        for j in range(vertices):
-            if i!=j:
-                if nx.has_path(G,i,j):
-                    s += 1
-                    p1 = [p for p in nx.all_shortest_paths(G,i,j,weight='weight')]
-                    w = path_weight(G,p1[0],'weight')
-                    if str(i)+'-'+str(j) in res.keys():
-                        p2 = res[str(i)+'-'+str(j)]
-                        if (not p2[0] in p1) and w!=p2[1]:
-                            if verbose:
-                                print('Path: '+str(p2[0])+' ('+str(p2[1])+'): correct: '+str(p1)+' ('+str(w)+')')
-                        else:
-                            ok += 1
-                    else:
-                        if verbose:
-                            print('Path suggested: '+str(i)+'-'+str(j)+' missing: correct: '+str(p1)+' ('+str(w)+')')
-    return (res,int(100*ok/s))

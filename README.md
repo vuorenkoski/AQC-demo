@@ -2,7 +2,7 @@
 
 This demo run some graph algorithms with quantum annealer (D-Wave).
 
-Framework: Python/Django/Bootstrap/Gunicorn
+Framework: Python/Django/Bootstrap/Gunicorn/D3 data visualization
 
 
 ## Run locally

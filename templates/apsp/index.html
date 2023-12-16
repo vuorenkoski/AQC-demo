@@ -20,20 +20,20 @@
                     <a class="mp" href="/"><p>Main Page</p></a>
                 </div>
                 <div class="col-sm-11">
-                    <div class="row p-2">
+                    <div class="row m-2">
                         <div class="col-sm-12">    
                             <h1>All pairs shortest path - demo</h1>
                         </div>
                     </div>
                     <div class="row m-2">
-                        <div class="col-sm-9 text-box rounded-top">    
+                        <div class="col-sm-11 text-box m-1 rounded-top">    
                             <p>This demo runs all pairs shorest paht algorithm with D-Wave leap local annealing simulator and quantum solver. 
                                 Beware, quantum solver can have long waiting-time to run if many qubits are needed.</p>
                             <p>Solver API token is needed if hybrid solver or quantum solver are used.</p>
                         </div>
                     </div>
                     <div class="row m-2">
-                        <div class="col-sm-4 text-box">    
+                        <div class="col-sm-4 text-box m-1">    
 
                             <h2>Solver and graph parameters</h2>
                             <form action="" method="POST" id="paramsForm">
@@ -59,7 +59,7 @@
                                         <p>Solver API Token:</p>
                                     </div>
                                     <div class="col-sm-8">    
-                                        <input type="text" class="form-control" id="token" name="token" value={{token}}>
+                                        <input type="text" class="form-control" name="token" value={{token}}>
                                     </div>
                                 </div>
                                 <div class="row">
@@ -67,15 +67,23 @@
                                         <p>Numer of reads:</p>
                                     </div>
                                     <div class="col-sm-8">    
-                                        <input type="number" class="form-control" id="reads" name="reads" value={{reads}}>
+                                        <input type="number" class="form-control" name="num_reads" value={{num_reads}} max="{{max_num_reads}}">
                                     </div>
                                 </div>
                                 <div class="row">
                                     <div class="col-sm-4">    
-                                        <p>Random seed:</p>
+                                        <p>Graph type:</p>
                                     </div>
                                     <div class="col-sm-8">    
-                                        <input type="number" class="form-control" id="seed" name="seed" value={{seed}}>
+                                        <select class="form-select" name="graph_type">
+                                        {% for t in graph_types %}
+                                            {% if t == graph_type %}
+                                                <option value="{{ t }}" selected="selected">{{ t }}</option>
+                                            {% else %}
+                                                <option value="{{ t }}">{{ t }}</option>
+                                            {% endif %}
+                                        {% endfor %}
+                                        </select>
                                     </div>
                                 </div>
                                 <div class="row">
@@ -83,15 +91,7 @@
                                         <p>Vertices:</p>
                                     </div>
                                     <div class="col-sm-8">    
-                                        <input type="number" class="form-control" id="size" name="size" value={{vertices}}>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-sm-4">    
-                                        <p>Max weight:</p>
-                                    </div>
-                                    <div class="col-sm-8">    
-                                        <input type="number" class="form-control" id="max_weight" name="max_weight" value={{max_weight}}>
+                                        <input type="number" class="form-control" name="vertices" value={{vertices}} min="{{min_vertices}}" max="{{max_vertices}}">
                                     </div>
                                 </div>
                                 {% if error %}
@@ -109,14 +109,12 @@
                                 <br>
                             </form>
                         </div>
-                        <div class="col-sm-6">    
-                            {% if graph %}
-                                <img src="data:image/png;base64, {{graph|safe}}" alt="" id="img">
-                            {% endif %}
+                        <div class="col-sm-7 text-box m-1">    
+                            <div id="graph_image"></div>
                         </div>
                     </div>                    
                     <div class="row m-2">
-                        <div class="col-sm-4 text-box">   
+                        <div class="col-sm-4 text-box m-1">   
                             {% if result %}
                             <table class="table table-striped">
                                 <thead>
@@ -218,7 +216,7 @@
                             </table>
                             {% endif %}
                         </div>
-                        <div class="col-sm-8">    
+                        <div class="col-sm-7 text-box m-1">    
                             {% if histogram %}
                             <img src="data:image/png;base64, {{histogram|safe}}" alt="" id="img">
                             {% endif %}
@@ -233,11 +231,227 @@
             </div>
         </div>
 
+        <div id="histogram_image"></div>
+
+        <script src="https://d3js.org/d3.v6.js"></script>
+
         <script type="text/javascript">
             document.getElementById("paramsForm").addEventListener("submit", (e) => {
               document.getElementById("submit-button").disabled = true;
               document.getElementById("run-message").textContent = "Running...";
             });
         </script>
+
+        <script type="text/javascript">
+            drag = simulation => {
+                function dragstarted(event, d) {
+                    if (!event.active) simulation.alphaTarget(0.3).restart();
+                    d.fx = d.x;
+                    d.fy = d.y;
+                }
+                
+                function dragged(event, d) {
+                    d.fx = event.x;
+                    d.fy = event.y;
+                }
+                
+                function dragended(event, d) {
+                    if (!event.active) simulation.alphaTarget(0);
+                    d.fx = null;
+                    d.fy = null;
+                }
+                
+                return d3.drag()
+                    .on("start", dragstarted)
+                    .on("drag", dragged)
+                    .on("end", dragended);
+            }
+
+            var gdata = {{ gdata|safe }}
+
+            const width = 750;
+            const height = 450;
+            const types = Array.from(new Set(gdata.map(d => d.type)));
+            const nodes = Array.from(new Set(gdata.flatMap(l => [l.source, l.target])), id => ({id}));
+            const links = gdata.map(d => Object.create(d))
+
+            const color = d3.scaleOrdinal(types, d3.schemeCategory10);
+
+            const simulation = d3.forceSimulation(nodes)
+                .force("link", d3.forceLink(links).id(d => d.id).distance(60))
+                .force("charge", d3.forceManyBody().strength(-400))
+                .force("x", d3.forceX())
+                .force("y", d3.forceY());
+
+            const svg = d3.select("#graph_image").append("svg")
+                .attr("viewBox", [-width / 2, -height / 2, width, height])
+                .attr("width", width)
+                .attr("height", height)
+                .attr("style", "max-width: 100%; height: auto; font: 12px sans-serif;");
+
+            // Per-type markers, as they don't inherit styles.
+            svg.append("defs").selectAll("marker")
+            .data(types)
+            .join("marker")
+                .attr("id", "arrow")
+                .attr("viewBox", "0 -5 10 10")
+                .attr("refX", 15)
+                .attr("refY", -0.5)
+                .attr("markerWidth", 6)
+                .attr("markerHeight", 6)
+                .attr("orient", "auto")
+            .append("path")
+                .attr("fill", "orange")
+                .attr("d", "M0,-5L10,0L0,5");
+
+            const link = svg.append("g")
+                .attr("fill", "none")
+                .attr("stroke-width", 1.5)
+            .selectAll("path")
+            .data(links)
+            .join("path")
+                .attr("stroke", "orange")
+                .attr("marker-end", d => `url(${new URL(`#arrow`, location)})`);
+
+            const edgepaths = svg.selectAll(".edgepath") //make path go along with the link provide position for link labels
+                .data(links)
+                .enter()
+                .append('path')
+                .attr('class', 'edgepath')
+                .attr('fill-opacity', 0)
+                .attr('stroke-opacity', 0)
+                .attr('id', function (d, i) {return 'edgepath' + i})
+                .style("pointer-events", "none");
+
+            const edgelabels = svg.selectAll(".edgelabel")
+                .data(links)
+                .enter()
+                .append('text')
+                .style("pointer-events", "none")
+                .attr('class', 'edgelabel')
+                .attr('id', function (d, i) {return 'edgelabel' + i})
+                .attr('font-size', 12)
+                .attr('fill', 'black');
+
+            edgelabels.append('textPath') //To render text along the shape of a <path>, enclose the text in a <textPath> element that has an href attribute with a reference to the <path> element.
+                .attr('xlink:href', function (d, i) {return '#edgepath' + i})
+                .style("text-anchor", "middle")
+                .style("pointer-events", "none")
+                .attr("startOffset", "50%")
+                .text(d => d.type);
+  
+
+            const node = svg.append("g")
+                .attr("fill", "currentColor")
+                .attr("stroke-linecap", "round")
+                .attr("stroke-linejoin", "round")
+            .selectAll("g")
+            .data(nodes)
+            .join("g")
+                .call(drag(simulation));
+
+            node.append("circle")
+                .attr("stroke", "white")
+                .attr("stroke-width", 1.5)
+                .attr("r", 8);
+
+            node.append("text")
+                .attr("x", 8)
+                .attr("y", "0.31em")
+                .text(d => d.id)
+            .clone(true).lower()
+                .attr("fill", "none")
+                .attr("stroke", "white")
+                .attr("stroke-width", 3);
+
+            simulation.on("tick", () => {
+                link.attr("d", linkArc);
+                node.attr("transform", d => `translate(${d.x},${d.y})`);
+                edgepaths.attr('d', d => 'M ' + d.source.x + ' ' + d.source.y + ' L ' + d.target.x + ' ' + d.target.y);
+            });
+
+            function linkArc(d) {
+                const r = Math.hypot(d.target.x - d.source.x, d.target.y - d.source.y);
+                return `
+                    M${d.source.x},${d.source.y}
+                    A${r},${r} 0 0,1 ${d.target.x},${d.target.y}
+                `;
+            }
+        </script>
+
+        <script type="text/javascript">
+//            var hdata = {{ hdata|safe }}
+            var hdata = [{"letter":"A","frequency":0.08167},{"letter":"B","frequency":0.01492},{"letter":"C","frequency":0.02782},{"letter":"D","frequency":0.04253},{"letter":"E","frequency":0.12702},{"letter":"F","frequency":0.02288},{"letter":"G","frequency":0.02015},{"letter":"H","frequency":0.06094},{"letter":"I","frequency":0.06966},{"letter":"J","frequency":0.00153},{"letter":"K","frequency":0.00772},{"letter":"L","frequency":0.04025},{"letter":"M","frequency":0.02406},{"letter":"N","frequency":0.06749},{"letter":"O","frequency":0.07507},{"letter":"P","frequency":0.01929},{"letter":"Q","frequency":0.00095},{"letter":"R","frequency":0.05987},{"letter":"S","frequency":0.06327},{"letter":"T","frequency":0.09056},{"letter":"U","frequency":0.02758},{"letter":"V","frequency":0.00978},{"letter":"W","frequency":0.0236},{"letter":"X","frequency":0.0015},{"letter":"Y","frequency":0.01974},{"letter":"Z","frequency":0.00074}]
+
+            // Specify the chart’s dimensions.
+            const hwidth = 928;
+            const hheight = 500;
+            const hmarginTop = 20;
+            const hmarginRight = 0;
+            const hmarginBottom = 30;
+            const hmarginLeft = 40;
+    
+            // Create the horizontal scale and its axis generator.
+            const x = d3.scaleBand()
+            .domain(d3.sort(hdata, d => -d.frequency).map(d => d.letter))
+            .range([hmarginLeft, hwidth - hmarginRight])
+            .padding(0.1);
+        
+            const xAxis = d3.axisBottom(x).tickSizeOuter(0);
+        
+        
+            // Create the vertical scale.
+            const y = d3.scaleLinear()
+            .domain([0, d3.max(hdata, d => d.frequency)]).nice()
+            .range([hheight - hmarginBottom, hmarginTop]);
+        
+            // Create the SVG container and call the zoom behavior.
+            const svg2 = d3.select("#histogram_image").append("svg")
+                .attr("viewBox", [0, 0, hwidth, hheight])
+                .attr("width", hwidth)
+                .attr("height", hheight)
+                .attr("style", "max-width: 100%; height: auto;")
+                .call(zoom);
+        
+            // Append the bars.
+            svg2.append("g")
+                .attr("class", "bars")
+                .attr("fill", "steelblue")
+            .selectAll("rect")
+            .data(hdata)
+            .join("rect")
+                .attr("x", d => x(d.letter))
+                .attr("y", d => y(d.frequency))
+                .attr("height", d => y(0) - y(d.frequency))
+                .attr("width", x.bandwidth());
+        
+            // Append the axes.
+            svg2.append("g")
+                .attr("class", "x-axis")
+                .attr("transform", `translate(0,${hheight - hmarginBottom})`)
+                .call(xAxis);
+        
+            svg2.append("g")
+                .attr("class", "y-axis")
+                .attr("transform", `translate(${hmarginLeft},0)`)
+                .call(d3.axisLeft(y))
+                .call(g => g.select(".domain").remove());
+        
+            function zoom(svg2) {
+            const extent = [[hmarginLeft, hmarginTop], [hwidth - hmarginRight, hheight - hmarginTop]];
+        
+            svg2.call(d3.zoom()
+                .scaleExtent([1, 8])
+                .translateExtent(extent)
+                .extent(extent)
+                .on("zoom", zoomed));
+        
+            function zoomed(event) {
+                x.range([hmarginLeft, hwidth - hmarginRight].map(d => event.transform.applyX(d)));
+                svg2.selectAll(".bars rect").attr("x", d => x(d.letter)).attr("width", x.bandwidth());
+                svg2.selectAll(".x-axis").call(xAxis);
+            }
+        }
+    </script>
     </body>
 </html>
