@@ -4,11 +4,10 @@ This demo run some graph algorithms with quantum annealer (D-Wave).
 
 Framework: Python/Django/Gunicorn/Bootstrap/D3.js
 
-
 ## Run locally
 
 ```
-pip install Django dwave-ocean-sdk matplotlib 
+pip install django dwave-ocean-sdk
 python manage.py runserver
 ```
 

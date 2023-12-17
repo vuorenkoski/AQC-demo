@@ -347,7 +347,7 @@ create_histogram = (hdata, target) => {
         .range([marginLeft, width - marginRight])
         .padding(0.1);
 
-    const xAxis = d3.axisBottom(x).tickSizeOuter(0);
+    const xAxis = d3.axisBottom(x).ticks(100).tickSizeOuter(0);
 
 
     // Create the vertical scale.
@@ -356,7 +356,7 @@ create_histogram = (hdata, target) => {
         .range([height - marginBottom, marginTop]);
 
     // Create the SVG container and call the zoom behavior.
-    const svg2 = d3.select(target).append('svg')
+    const svg = d3.select(target).append('svg')
         .attr('viewBox', [0, 0, width, height])
         .attr('width', width)
         .attr('height', height)
@@ -364,19 +364,19 @@ create_histogram = (hdata, target) => {
         .call(zoom);
 
     // Append the bars.
-    svg2.append('g')
+    svg.append('g')
         .attr('class', 'bars')
         .attr('fill', 'orange')
     .selectAll('rect')
     .data(hdata)
     .join('rect')
         .attr('x', d => x(d.energy))
-        .attr('y', d => y(d.num_occurrences))
-        .attr('height', d => y(0) - y(d.num_occurrences))
+        .attr('y', d => y(0))
+        .attr('height', d => 0)
         .attr('width', x.bandwidth());
 
     // Append the axes.
-    svg2.append('g')
+    svg.append('g')
         .attr('class', 'x-axis')
         .attr('transform', `translate(0,${height - marginBottom})`)
         .call(xAxis)
@@ -388,7 +388,7 @@ create_histogram = (hdata, target) => {
             .text('Energy level')
             .attr('font-size', 16));
 
-    svg2.append('g')
+    svg.append('g')
         .attr('class', 'y-axis')
         .attr('transform', `translate(${marginLeft},0)`)
         .call(d3.axisLeft(y))
@@ -401,10 +401,10 @@ create_histogram = (hdata, target) => {
             .text('Number of occurences')
             .attr('font-size', 16));
 
-    function zoom(svg2) {
+    function zoom(svg) {
         const extent = [[marginLeft, marginTop], [width - marginRight, height - marginTop]];
 
-        svg2.call(d3.zoom()
+        svg.call(d3.zoom()
             .scaleExtent([1, 8])
             .translateExtent(extent)
             .extent(extent)
@@ -412,8 +412,45 @@ create_histogram = (hdata, target) => {
 
         function zoomed(event) {
             x.range([marginLeft, width - marginRight].map(d => event.transform.applyX(d)));
-            svg2.selectAll('.bars rect').attr('x', d => x(d.energy)).attr('width', x.bandwidth());
-            svg2.selectAll('.x-axis').call(xAxis);
+            svg.selectAll('.bars rect').attr('x', d => x(d.energy)).attr('width', x.bandwidth());
+            svg.selectAll('.x-axis').call(xAxis);
         }
     }
+
+    svg.selectAll("rect")
+        .transition()
+        .duration(1800)
+        .attr('y', d => y(d.num_occurrences))
+        .attr('height', d => y(0) - y(d.num_occurrences))
+
+    // TOOLTIP
+    const tooltip = d3
+        .select("body")
+        .append("div")
+        .attr("class", "svg-tooltip")
+        .style("position", "absolute")
+        .style("visibility", "hidden");
+    
+    d3.selectAll("rect")
+    .on("mouseover", function(event, d) {
+        // change the selection style
+        d3.select(this)
+        .attr('stroke-width', '2')
+        .attr("stroke", "black");
+        // make the tooltip visible and update its text
+        tooltip
+        .style("visibility", "visible")
+        .text(`Energy: ${d.energy}, Occurences: ${d.num_occurrences}`);
+    })
+    .on("mousemove", function(event,d) {
+        tooltip
+        .style("top", event.y - 10 + "px")
+        .style("left", event.x + 10 + "px");
+    })
+    .on("mouseout", function() {
+        // change the selection style
+        d3.select(this).attr('stroke-width', '0');
+
+        tooltip.style("visibility", "hidden");
+    });
 }

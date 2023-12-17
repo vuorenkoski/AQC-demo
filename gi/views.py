@@ -4,6 +4,7 @@ import time
 import dimod
 from dwave.system import DWaveSampler, EmbeddingComposite, LeapHybridSampler
 from dwave.samplers import SimulatedAnnealingSampler
+import dwave.inspector
 
 from qcdemo.check_result import check_result_gi
 from qcdemo.qubo_functions import create_qubo_gi
@@ -34,11 +35,11 @@ def index(request):
 
         if resp['vertices']<min_vertices or resp['vertices']>max_vertices:
             resp['error'] = 'vertices must be '+str(min_vertices)+'..'+str(max_vertices)
-            return render(request, 'apsp/index.html', resp) 
+            return render(request, 'gi/index.html', resp) 
 
         if resp['num_reads']>max_num_reads:
             resp['error'] = 'Maximum number fo reads is '+str(max_num_reads)
-            return render(request, 'apsp/index.html', resp) 
+            return render(request, 'gi/index.html', resp) 
 
         G1, G2 = create_graph(resp['graph_type'],resp['vertices'], weight=False, directed=False, permutation=True)
         resp['gdata'] = graph_to_json(G1)
@@ -68,7 +69,7 @@ def index(request):
                 result['time'] = int(sampleset.info['qpu_access_time'] / 1000)
             except Exception as err:
                 resp['error'] = err
-                return render(request, 'apsp/index.html', resp) 
+                return render(request, 'gi/index.html', resp) 
         elif resp['solver'] =='quantum solver':
             try:
                 machine = DWaveSampler(token=resp['token'])
@@ -80,7 +81,7 @@ def index(request):
                 resp['hdata'] = hdata_to_json(sampleset)
             except Exception as err:
                 resp['error'] = err
-                return render(request, 'apsp/index.html', resp) 
+                return render(request, 'gi/index.html', resp) 
         result['energy'] = int(sampleset.first.energy)
         result['success'] = check_result_gi(sampleset, result['exp_energy'])
         resp['result'] = result

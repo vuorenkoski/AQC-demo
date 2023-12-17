@@ -4,6 +4,7 @@ import time
 import dimod
 from dwave.system import DWaveSampler, EmbeddingComposite, LeapHybridSampler
 from dwave.samplers import SimulatedAnnealingSampler
+import dwave.inspector
 
 from qcdemo.check_result import check_result_apsp, result_paths
 from qcdemo.qubo_functions import create_qubo_apsp

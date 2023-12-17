@@ -5,14 +5,14 @@ import time
 import dimod
 from dwave.system import DWaveSampler, EmbeddingComposite, LeapHybridSampler
 from dwave.samplers import SimulatedAnnealingSampler
-import networkx as nx
+import dwave.inspector
 
 from qcdemo.check_result import check_result_cd
 from qcdemo.qubo_functions import create_qubo_cd
 from qcdemo.graphs import create_graph
 from qcdemo.utils import hdata_to_json, graph_to_json
 
-colors=["#fbb4ae","#b3cde3","#ccebc5","#decbe4","#fed9a6","#ffffcc","#e5d8bd","#fddaec","#f2f2f2"]
+colors=['#777777','#fbb4ae','#b3cde3','#ccebc5','#decbe4','#fed9a6','#ffffcc','#e5d8bd','#fddaec','#f2f2f2']
 
 min_vertices = 5
 max_vertices = 20
@@ -43,15 +43,15 @@ def index(request):
 
         if resp['vertices']<min_vertices or resp['vertices']>max_vertices:
             resp['error'] = 'vertices must be '+str(min_vertices)+'..'+str(max_vertices)
-            return render(request, 'apsp/index.html', resp) 
+            return render(request, 'cd/index.html', resp) 
 
         if resp['communities']<min_communities or resp['communities']>max_communities:
             resp['error'] = 'communities must be '+str(min_communities)+'..'+str(max_communities)
-            return render(request, 'apsp/index.html', resp) 
+            return render(request, 'cd/index.html', resp) 
 
         if resp['num_reads']>max_num_reads:
             resp['error'] = 'Maximum number fo reads is '+str(max_num_reads)
-            return render(request, 'apsp/index.html', resp) 
+            return render(request, 'cd/index.html', resp) 
 
         G = create_graph(resp['graph_type'],resp['vertices'], weight=True, directed=False)
         labels = {}
@@ -79,7 +79,7 @@ def index(request):
                 result['time'] = int(sampleset.info['qpu_access_time'] / 1000)
             except Exception as err:
                 resp['error'] = err
-                return render(request, 'apsp/index.html', resp) 
+                return render(request, 'cd/index.html', resp) 
         elif resp['solver'] =='quantum solver':
             try:
                 machine = DWaveSampler(token=resp['token'])
@@ -91,7 +91,7 @@ def index(request):
                 resp['hdata'] = hdata_to_json(sampleset)
             except Exception as err:
                 resp['error'] = err
-                return render(request, 'apsp/index.html', resp) 
+                return render(request, 'cd/index.html', resp) 
         resp['gdata'] = graph_to_json(G)
         resp['gcolors'] = result_to_colors(G, sampleset.first.sample)
         result['energy'] = int(sampleset.first.energy)
