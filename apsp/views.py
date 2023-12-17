@@ -1,20 +1,14 @@
 from django.shortcuts import render
-from django.http import HttpResponse, JsonResponse
 
-import matplotlib.pyplot as plt
-import numpy as np
 import time
-import random
 import dimod
 from dwave.system import DWaveSampler, EmbeddingComposite, LeapHybridSampler
 from dwave.samplers import SimulatedAnnealingSampler
-import networkx as nx
-from io import BytesIO
-import base64
 
 from qcdemo.check_result import check_result_apsp, result_paths
 from qcdemo.qubo_functions import create_qubo_apsp
 from qcdemo.graphs import create_graph
+from qcdemo.utils import hdata_to_json, graph_to_json
 
 min_vertices = 5
 max_vertices = 20
@@ -30,7 +24,6 @@ def index(request):
     resp['min_vertices'] = min_vertices
     resp['max_vertices'] = max_vertices
     resp['max_num_reads'] = max_num_reads
-    resp['data'] = JsonResponse([], safe=False).content.decode('utf-8')
     if request.method == "POST":
         resp['vertices'] = int(request.POST['vertices'])
         resp['num_reads'] = int(request.POST['num_reads'])
@@ -55,7 +48,6 @@ def index(request):
         for i,e in enumerate(G.edges):
             labels[resp['vertices']*2+i] = str(e[0]) + '-' + str(e[1])
             
-        
         Q = create_qubo_apsp(G)
         bqm = dimod.BinaryQuadraticModel(Q, 'BINARY').relabel_variables(labels, inplace=False)
 
@@ -69,15 +61,7 @@ def index(request):
             ts = time.time()
             sampleset = SimulatedAnnealingSampler().sample(bqm, num_reads=resp['num_reads']).aggregate()
             result['time'] = int((time.time()-ts)*1000)
-            resp['histogram'] = print_histogram(sampleset, fig_size=5)
-        elif resp['solver'] =='cloud hybrid solver':
-            try:
-                sampleset = LeapHybridSampler(token=resp['token']).sample(bqm).aggregate()
-                result['time'] = int(sampleset.info['qpu_access_time'] / 1000)
-                resp['histogram'] = None
-            except Exception as err:
-                resp['error'] = err
-                return render(request, 'apsp/index.html', resp) 
+            resp['hdata'] = hdata_to_json(sampleset)
         elif resp['solver'] =='quantum solver':
             try:
                 machine = DWaveSampler(token=resp['token'])
@@ -86,7 +70,7 @@ def index(request):
                 result['time'] = int(sampleset.info['timing']['qpu_access_time'] / 1000)
                 result['physical_qubits'] = sum(len(x) for x in sampleset.info['embedding_context']['embedding'].values())
                 result['chainb'] = sampleset.first.chain_break_fraction
-                resp['histogram'] = print_histogram(sampleset, fig_size=5)
+                resp['hdata'] = hdata_to_json(sampleset)
             except Exception as err:
                 resp['error'] = err
                 return render(request, 'apsp/index.html', resp) 
@@ -102,54 +86,4 @@ def index(request):
         resp['solver'] = 'local simulator'
         resp['token'] = ''
         resp['graph_type'] = 'wheel graph'
-
-        resp['graph'] = None
-        resp['histogram'] = None
-        resp['result'] = {}
     return render(request, 'apsp/index.html', resp) 
-
-def graph_to_json(G):
-    data = []
-    for e in G.edges(data=True):
-        data.append({'source':e[0],'target':e[1],'type':e[2]['weight']})
-#    JsonResponse([{"source":0,"target":1,"type":10}, {"source":0,"target":2,"type":5}], safe=False)
-    return JsonResponse(data, safe=False).content.decode('utf-8')
-
-
-
-def print_histogram(sampleset, fig_size=6):
-    data = {}
-    maxv = int(sampleset.first.energy)
-    minv = int(sampleset.first.energy)
-    for e,n in sampleset.data(fields=['energy','num_occurrences']):
-        energy = int(e)
-        minv = min(energy,minv)
-        maxv = max(energy,maxv)
-        if energy in data.keys():
-            data[energy] += n
-        else:
-            data[energy] = n
-    labels = []
-    datap = []
-    for i in range(minv,maxv):
-        labels.append(i)
-        if i in data.keys():
-            datap.append(data[i])
-        else:
-            datap.append(0)
-
-    plt.switch_backend('AGG')
-    plt.figure(figsize=(fig_size, fig_size))
-    plt.bar(labels,datap)
-    plt.xlabel('Energy')
-    plt.ylabel('Occcurrences')
-
-    buffer = BytesIO()
-    plt.savefig(buffer, format='png')
-    buffer.seek(0)
-    image_png = buffer.getvalue()
-    graph = base64.b64encode(image_png)
-    graph = graph.decode('utf-8')
-    buffer.close()
-    return graph
-

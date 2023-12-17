@@ -20,21 +20,20 @@
                     <a class="mp" href="/"><p>Main Page</p></a>
                 </div>
                 <div class="col-sm-11">
-                    <div class="row p-2">
+                    <div class="row m-2">
                         <div class="col-sm-12">    
-                            <h1>Community detection - demo</h1>
+                            <h1>Community detection- demo</h1>
                         </div>
                     </div>
-                    <div class="row m-2">
-                        <div class="col-sm-9 text-box rounded-top">    
-                            <p>This demo runs community detection algorithm with D-Wave leap heuristic local annealing simulator, hybrid solver in the cloud and quantum solver. 
+                    <div class="row m-1">
+                        <div class="col-sm-11 text-box rounded-top">    
+                            <p>This demo runs Community detection algorithm with D-Wave leap local annealing simulator and quantum solver. 
                                 Beware, quantum solver can have long waiting-time to run if many qubits are needed.</p>
-                            <p>Gray vertices are not mapped to any community.</p>
                             <p>Solver API token is needed if hybrid solver or quantum solver are used.</p>
                         </div>
                     </div>
-                    <div class="row m-2">
-                        <div class="col-sm-4 text-box">    
+                    <div class="row m-0">
+                        <div class="col-sm-4 text-box m-1">    
 
                             <h2>Solver and graph parameters</h2>
                             <form action="" method="POST" id="paramsForm">
@@ -60,7 +59,7 @@
                                         <p>Solver API Token:</p>
                                     </div>
                                     <div class="col-sm-8">    
-                                        <input type="text" class="form-control" id="token" name="token" value={{token}}>
+                                        <input type="text" class="form-control" name="token" value={{token}}>
                                     </div>
                                 </div>
                                 <div class="row">
@@ -68,15 +67,23 @@
                                         <p>Numer of reads:</p>
                                     </div>
                                     <div class="col-sm-8">    
-                                        <input type="number" class="form-control" id="reads" name="reads" value={{reads}}>
+                                        <input type="number" class="form-control" name="num_reads" value={{num_reads}} max="{{max_num_reads}}">
                                     </div>
                                 </div>
                                 <div class="row">
                                     <div class="col-sm-4">    
-                                        <p>Random seed:</p>
+                                        <p>Graph type:</p>
                                     </div>
                                     <div class="col-sm-8">    
-                                        <input type="number" class="form-control" id="seed" name="seed" value={{seed}}>
+                                        <select class="form-select" name="graph_type">
+                                        {% for t in graph_types %}
+                                            {% if t == graph_type %}
+                                                <option value="{{ t }}" selected="selected">{{ t }}</option>
+                                            {% else %}
+                                                <option value="{{ t }}">{{ t }}</option>
+                                            {% endif %}
+                                        {% endfor %}
+                                        </select>
                                     </div>
                                 </div>
                                 <div class="row">
@@ -84,15 +91,7 @@
                                         <p>Vertices:</p>
                                     </div>
                                     <div class="col-sm-8">    
-                                        <input type="number" class="form-control" id="size" name="size" value={{vertices}}>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-sm-4">    
-                                        <p>Max weight:</p>
-                                    </div>
-                                    <div class="col-sm-8">    
-                                        <input type="number" class="form-control" id="max_weight" name="max_weight" value={{max_weight}}>
+                                        <input type="number" class="form-control" name="vertices" value={{vertices}} min="{{min_vertices}}" max="{{max_vertices}}">
                                     </div>
                                 </div>
                                 <div class="row">
@@ -100,7 +99,7 @@
                                         <p>Max communities:</p>
                                     </div>
                                     <div class="col-sm-8">    
-                                        <input type="number" class="form-control" id="communities" name="communities" value={{communities}}>
+                                        <input type="number" class="form-control" name="communities" value={{communities}} min="{{min_communities}}" max="{{max_communities}}">
                                     </div>
                                 </div>
                                 {% if error %}
@@ -118,14 +117,12 @@
                                 <br>
                             </form>
                         </div>
-                        <div class="col-sm-6">    
-                            {% if graph %}
-                                <img src="data:image/png;base64, {{graph|safe}}" alt="" id="img">
-                            {% endif %}
+                        <div class="col-sm-7 text-box m-1">    
+                            <div id="graph_image"></div>
                         </div>
                     </div>                    
-                    <div class="row m-2">
-                        <div class="col-sm-4 text-box">   
+                    <div class="row m-0">
+                        <div class="col-sm-4 text-box m-1">   
                             {% if result %}
                             <table class="table table-striped">
                                 <thead>
@@ -190,10 +187,16 @@
                                         <td>{{result.energy}}</td>
                                     </tr>
                                     {% endif %}
-                                    {% if result.occurences %}
+                                    {% if result.exp_energy %}
                                     <tr>
-                                        <td>Number of occurences (lowest)</td>
-                                        <td>{{result.occurences}} / {{reads}}</td>
+                                        <td>Expected energy</td>
+                                        <td>{{result.exp_energy}}</td>
+                                    </tr>
+                                    {% endif %}
+                                    {% if result.success %}
+                                    <tr>
+                                        <td>Result</td>
+                                        <td>{{result.success}}</td>
                                     </tr>
                                     {% endif %}
                                     {% if result.chainb %}
@@ -206,10 +209,8 @@
                             </table>
                             {% endif %}
                         </div>
-                        <div class="col-sm-8">    
-                            {% if histogram %}
-                            <img src="data:image/png;base64, {{histogram|safe}}" alt="" id="img">
-                            {% endif %}
+                        <div class="col-sm-7 text-box m-1">    
+                            <div id="histogram_image"></div>
                         </div>
                     </div>
                     <div class="row">
@@ -220,6 +221,23 @@
                 </div>
             </div>
         </div>
+
+        <script src="{% static 'd3.v7.min.js' %}"></script>
+        <script src="{% static 'd3_functions.js' %}"></script>
+        {% if gdata %}
+        <script type="text/javascript">
+            var gdata = {{ gdata|safe }}
+            var gcolors = {{ gcolors|safe }}
+            create_graph_wc(gdata, gcolors, "#graph_image") 
+        </script>
+        {% endif %}
+
+        {% if hdata %}
+        <script type="text/javascript">
+            var hdata = {{ hdata|safe }}
+            create_histogram(hdata, "#histogram_image") 
+        </script>
+        {% endif %}
 
         <script type="text/javascript">
             document.getElementById("paramsForm").addEventListener("submit", (e) => {

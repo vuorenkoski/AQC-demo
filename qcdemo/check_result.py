@@ -79,10 +79,13 @@ def check_result_apsp(G,sampleset):
                     path,w2 = res[str(i)+'-'+str(j)]
                     if (path in sp) and w1==w2:      # Is path among correct paths and are weights same
                         ok += 1
-    return str(int(100*ok/s))
+    return str(int(100*ok/s))+'%'
 
 def check_result_gi(sampleset, e):
-    return str(int(sampleset.first.energy)-e)
+    if int(sampleset.first.energy)==e:
+        return 'isomorphic'
+    else:
+        return 'non-isomorphic'
 
 def check_result_cd(G, sampleset, communities):
     c1 = nx.community.greedy_modularity_communities(G, weight='weight', best_n=communities)

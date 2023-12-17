@@ -1,201 +1,93 @@
 from django.shortcuts import render
-from django.http import HttpResponse
 
-import matplotlib.pyplot as plt
-import numpy as np
 import time
-import random
 import dimod
 from dwave.system import DWaveSampler, EmbeddingComposite, LeapHybridSampler
 from dwave.samplers import SimulatedAnnealingSampler
-import dwave.inspector
-import networkx as nx
-from io import BytesIO
-import base64
 
-solvers = ['local simulator', 'cloud hybrid solver', 'quantum solver']
-gtypes = ['identical', 'permuted', 'random']
+from qcdemo.check_result import check_result_gi
+from qcdemo.qubo_functions import create_qubo_gi
+from qcdemo.graphs import create_graph
+from qcdemo.utils import hdata_to_json, graph_to_json
+
+min_vertices = 5
+max_vertices = 20
+max_num_reads = 10000
+solvers = ['local simulator', 'quantum solver', 'cloud hybrid solver']
+graph_types = ['path graph', 'star graph', 'cycle graph', 'complete graph', 'tree graph', 'single cycle graph', 
+               'multiple cycle graph', 'bipartite graph', 'wheel graph', 'community graph', 'random graph']
+
 
 def index(request):
+    resp = {}
+    resp['solvers'] = solvers
+    resp['graph_types'] = graph_types
+    resp['min_vertices'] = min_vertices
+    resp['max_vertices'] = max_vertices
+    resp['max_num_reads'] = max_num_reads
     if request.method == "POST":
-        size = int(request.POST['size'])
-        seed = int(request.POST['seed'])
-        gtype = request.POST['type']
-        num_reads = int(request.POST['reads'])
-        solver = request.POST['solver']
-        token = request.POST['token']
+        resp['vertices'] = int(request.POST['vertices'])
+        resp['num_reads'] = int(request.POST['num_reads'])
+        resp['solver'] = request.POST['solver']
+        resp['token'] = request.POST['token']
+        resp['graph_type'] = request.POST['graph_type']
 
-        if size<1 or size>50:
-            return render(request, 'gi/index.html', {'seed':seed, 'vertices':size, 'types':gtypes, 'type':gtype, 'token':token,
-                                                     'solvers':solvers, 'solver':solver, 'reads':num_reads, 'error': 'vertices must be 1..50'}) 
+        if resp['vertices']<min_vertices or resp['vertices']>max_vertices:
+            resp['error'] = 'vertices must be '+str(min_vertices)+'..'+str(max_vertices)
+            return render(request, 'apsp/index.html', resp) 
 
-        random.seed(seed)
-        G1 = nx.random_geometric_graph(size, 0.5, seed=seed)
-        E1 = [] 
-        E2 = [] 
-        for e in G1.edges(data=True):
-            E1.append((e[0],e[1]))
-        p=len(E1)
-        if gtype=='identical':
-            G2 = G1
-            for e in G1.edges(data=True):
-                E2.append((e[0],e[1]))
-        elif gtype=='permuted':
-            mapping = dict(zip(G1.nodes(), sorted(G1.nodes(), key=lambda k: random.random())))
-            G2 = nx.relabel_nodes(G1, mapping)
-            for e in G2.edges(data=True):
-                E2.append((e[0],e[1]))
-        elif gtype=='random':
-            i = 1
-            G2 = nx.random_geometric_graph(size, 0.5, seed=seed+i) 
-            while len(G2.edges)!=len(G1.edges):
-                i += 1
-                G2 = nx.random_geometric_graph(size, 0.5, seed=seed+i) 
-            for e in G2.edges(data=True):
-                E2.append((e[0],e[1]))
+        if resp['num_reads']>max_num_reads:
+            resp['error'] = 'Maximum number fo reads is '+str(max_num_reads)
+            return render(request, 'apsp/index.html', resp) 
 
+        G1, G2 = create_graph(resp['graph_type'],resp['vertices'], weight=False, directed=False, permutation=True)
+        resp['gdata'] = graph_to_json(G1)
         labels = {}
-        for i in range(size):
-            for j in range(size):
-                labels[i*size+j] = (i,j)
+        for i in range(resp['vertices']):
+            for j in range(resp['vertices']):
+                labels[i*resp['vertices']+j] = (i,j)
+            
+        Q = create_qubo_gi(G1,G2)
+        bqm = dimod.BinaryQuadraticModel(Q, 'BINARY').relabel_variables(labels, inplace=False)
 
-        Q = create_qubo(E1, E2, size, p)
-        bqm = dimod.BinaryQuadraticModel(Q, 'BINARY').relabel_variables(labels, inplace=False) 
         result = {}
         result['edges'] = len(G1.edges)
         result['vertices'] = len(G1.nodes)
         result['qubo_size'] = Q.shape[0]
         result['logical_qubits'] = Q.shape[0]
-        result['exp_energy'] = -len(E1)
         result['couplers'] = len(bqm.quadratic)
-        if solver=='local simulator':
+        result['exp_energy'] = -len(G1.edges)
+        if resp['solver'] =='local simulator':
             ts = time.time()
-            sampleset = SimulatedAnnealingSampler().sample(bqm, num_reads=num_reads).aggregate()
+            sampleset = SimulatedAnnealingSampler().sample(bqm, num_reads=resp['num_reads']).aggregate()
             result['time'] = int((time.time()-ts)*1000)
-            hist = print_histogram(sampleset, fig_size=5)
-            result['occurences'] = int(sampleset.first.num_occurrences)
-        elif solver=='cloud hybrid solver':
+            resp['hdata'] = hdata_to_json(sampleset)
+        elif resp['solver']=='cloud hybrid solver':
             try:
-                sampleset = LeapHybridSampler(token=token).sample(bqm).aggregate()
+                sampleset = LeapHybridSampler(token=resp['token']).sample(bqm).aggregate()
+                result['time'] = int(sampleset.info['qpu_access_time'] / 1000)
             except Exception as err:
-                return render(request, 'gi/index.html', {'seed':seed, 'vertices':size, 'types':gtypes, 'type':gtype, 'token':token,
-                                                     'solvers':solvers, 'solver':solver, 'reads':num_reads, 'error': err}) 
-            result['time'] = int(sampleset.info['qpu_access_time'] / 1000)
-            hist = None
-        elif solver=='quantum solver':
+                resp['error'] = err
+                return render(request, 'apsp/index.html', resp) 
+        elif resp['solver'] =='quantum solver':
             try:
-                machine = DWaveSampler(token=token)
+                machine = DWaveSampler(token=resp['token'])
                 result['chipset'] = machine.properties['chip_id']
-                sampleset = EmbeddingComposite(machine).sample(bqm, num_reads=num_reads).aggregate()
+                sampleset = EmbeddingComposite(machine).sample(bqm, num_reads=resp['num_reads']).aggregate()
+                result['time'] = int(sampleset.info['timing']['qpu_access_time'] / 1000)
+                result['physical_qubits'] = sum(len(x) for x in sampleset.info['embedding_context']['embedding'].values())
+                result['chainb'] = sampleset.first.chain_break_fraction
+                resp['hdata'] = hdata_to_json(sampleset)
             except Exception as err:
-                return render(request, 'gi/index.html', {'seed':seed, 'vertices':size, 'types':gtypes, 'type':gtype, 'token':token,
-                                                     'solvers':solvers, 'solver':solver, 'reads':num_reads, 'error': err}) 
-            result['time'] = int(sampleset.info['timing']['qpu_access_time'] / 1000)
-            result['physical_qubits'] = sum(len(x) for x in sampleset.info['embedding_context']['embedding'].values())
-            result['chainb'] = sampleset.first.chain_break_fraction
-            hist = print_histogram(sampleset, fig_size=5)
-            result['occurences'] = int(sampleset.first.num_occurrences)
+                resp['error'] = err
+                return render(request, 'apsp/index.html', resp) 
         result['energy'] = int(sampleset.first.energy)
-        print(solver)
-        if result['exp_energy']==result['energy']:
-            result['result']='isomorphic'
-        else:
-            result['result']='non-isomorphic'
-        graph1 = print_graph(G1, fig_size=4)
-        graph2 = print_graph(G2, fig_size=4)
+        result['success'] = check_result_gi(sampleset, result['exp_energy'])
+        resp['result'] = result
     else:
-        solver = 'local simulator'
-        gtype = 'identical'
-        token = ''
-        size = 7
-        seed = 42
-        num_reads = 1000
-        graph1 = None
-        graph2 = None
-        hist = None
-        result = {}
-    return render(request, 'gi/index.html', {'graph1':graph1, 'graph2':graph2, 'result':result, 'seed':seed, 'vertices':size, 'token':token,
-                  'type':gtype, 'types':gtypes, 'solvers':solvers, 'solver':solver, 'reads':num_reads, 'histogram':hist}) 
-
-def create_qubo(E1,E2,vertices,p):
-    Q = np.zeros((vertices*vertices, vertices*vertices))
-    
-    # Constraint 1: penalty if several mappings from same source
-    for i in range(vertices): 
-        for j in range(vertices): 
-            for k in range(j+1,vertices): 
-                Q[i*vertices+j,i*vertices+k]=p 
-
-    # Constaint 2: penalty if several mappings to same target
-    for i in range(vertices): 
-        for j in range(vertices): 
-            for k in range(j+1,vertices): 
-                Q[i+vertices*j,i+vertices*k]=p 
-                
-    # Constraint 3: -1 for each succesfully mapped edge: (x1,y1) -> (x2,y2) 
-    #    two possible mappings: (x1->x2, y1->y2) or (x1->y2,y1->x2)
-    for e1 in E1: 
-        for e2 in E2: 
-            Q[e1[0]*vertices+e2[0], e1[1]*vertices+e2[1]] -= 1
-            Q[e1[0]*vertices+e2[1], e1[1]*vertices+e2[0]] -= 1
-            
-    # All quadratic coefficients in lower triangle to upper triangle
-    for i in range(vertices): 
-        for j in range(i):
-            Q[j,i] += Q[i,j]
-            Q[i,j] = 0
-    return Q
-
-def print_graph(G, fig_size=6):
-    plt.switch_backend('AGG')
-    pos = nx.spring_layout(G)
-    plt.figure(figsize=(fig_size, fig_size))
-    nx.draw_networkx_edges(G, pos)
-    nx.draw_networkx_nodes(G, pos, node_size=80)
-    plt.axis("off")
-    plt.show()
-    
-    buffer = BytesIO()
-    plt.savefig(buffer, format='png')
-    buffer.seek(0)
-    image_png = buffer.getvalue()
-    graph = base64.b64encode(image_png)
-    graph = graph.decode('utf-8')
-    buffer.close()
-    return graph
-
-def print_histogram(sampleset, fig_size=6):
-    data = {}
-    maxv = int(sampleset.first.energy)
-    minv = int(sampleset.first.energy)
-    for e,n in sampleset.data(fields=['energy','num_occurrences']):
-        energy = int(e)
-        minv = min(energy,minv)
-        maxv = max(energy,maxv)
-        if energy in data.keys():
-            data[energy] += n
-        else:
-            data[energy] = n
-    labels = []
-    datap = []
-    for i in range(minv,maxv):
-        labels.append(i)
-        if i in data.keys():
-            datap.append(data[i])
-        else:
-            datap.append(0)
-
-    plt.switch_backend('AGG')
-    plt.figure(figsize=(fig_size, fig_size))
-    plt.bar(labels,datap)
-    plt.xlabel('Energy')
-    plt.ylabel('Occcurrences')
-
-    buffer = BytesIO()
-    plt.savefig(buffer, format='png')
-    buffer.seek(0)
-    image_png = buffer.getvalue()
-    graph = base64.b64encode(image_png)
-    graph = graph.decode('utf-8')
-    buffer.close()
-    return graph
+        resp['vertices'] = 7
+        resp['num_reads'] = 2000
+        resp['solver'] = 'local simulator'
+        resp['token'] = ''
+        resp['graph_type'] = 'wheel graph'
+    return render(request, 'gi/index.html', resp) 
