@@ -2,7 +2,6 @@ from django.shortcuts import render
 
 import numpy as np
 import time
-import random
 import dimod
 from dwave.system import DWaveSampler, EmbeddingComposite, LeapHybridSampler
 from dwave.samplers import SimulatedAnnealingSampler
@@ -107,87 +106,6 @@ def index(request):
         resp['communities'] = 4
     return render(request, 'cd/index.html', resp) 
 
-def index2(request):
-    if request.method == "POST":
-        size = int(request.POST['size'])
-        seed = int(request.POST['seed'])
-        communities = int(request.POST['communities'])
-        max_weight = int(request.POST['max_weight'])
-        num_reads = int(request.POST['reads'])
-        solver = request.POST['solver']
-        token = request.POST['token']
-
-        if size<1 or size>150:
-            return render(request, 'cd/index.html', {'seed':seed, 'vertices':size, 'communities':communities, 'max_weight':max_weight, 'token':token,
-                                                     'solvers':solvers, 'solver':solver, 'reads':num_reads, 'error': 'vertices must be 1..150'}) 
-        if communities<1 or communities>7:
-            return render(request, 'cd/index.html', {'seed':seed, 'vertices':size, 'communities':communities, 'max_weight':max_weight, 'token':token,
-                                                     'solvers':solvers, 'solver':solver, 'reads':num_reads, 'error': 'communities must be 1..7'}) 
-
-        random.seed(seed)
-        G = nx.random_geometric_graph(size, 0.3, seed=seed)
-        nx.set_edge_attributes(G, {e: {'weight': random.randint(1, max_weight)} for e in G.edges})
-
-        max_count = 0
-        for e in G.edges:
-            max_count += G[e[0]][e[1]]['weight']
-
-        labels = {}
-        for i in range(len(G.nodes)):
-            for j in range(communities):
-                labels[i*communities + j]=(i,j)
-
-        Q = create_qubo(G, communities, max_count)
-        bqm = dimod.BinaryQuadraticModel(Q, 'BINARY').relabel_variables(labels, inplace=False) 
-        result = {}
-        result['edges'] = len(G.edges)
-        result['vertices'] = len(G.nodes)
-        result['qubo_size'] = Q.shape[0]
-        result['logical_qubits'] = Q.shape[0]  
-        result['couplers'] = len(bqm.quadratic)
-        if solver=='local simulator':
-            ts = time.time()
-            sampleset = SimulatedAnnealingSampler().sample(bqm, num_reads=num_reads).aggregate()
-            result['time'] = int((time.time()-ts)*1000)
-            hist = print_histogram(sampleset, fig_size=5)
-            result['occurences'] = int(sampleset.first.num_occurrences)
-        elif solver=='cloud hybrid solver':
-            try:
-                sampleset = LeapHybridSampler(token=token).sample(bqm).aggregate()
-            except Exception as err:
-                return render(request, 'cd/index.html', {'seed':seed, 'vertices':size, 'communities':communities, 'max_weight':max_weight, 'token':token,
-                                                     'solvers':solvers, 'solver':solver, 'reads':num_reads, 'error': err}) 
-            result['time'] = int(sampleset.info['qpu_access_time'] / 1000)
-            hist = None
-        elif solver=='quantum solver':
-            try:
-                machine = DWaveSampler(token=token)
-                result['chipset'] = machine.properties['chip_id']
-                sampleset = EmbeddingComposite(machine).sample(bqm, num_reads=num_reads).aggregate()
-            except Exception as err:
-                return render(request, 'cd/index.html', {'seed':seed, 'vertices':size, 'communities':communities, 'max_weight':max_weight, 'token':token,
-                                                     'solvers':solvers, 'solver':solver, 'reads':num_reads, 'error': err}) 
-            result['time'] = int(sampleset.info['timing']['qpu_access_time'] / 1000)
-            result['physical_qubits'] = sum(len(x) for x in sampleset.info['embedding_context']['embedding'].values())
-            result['chainb'] = sampleset.first.chain_break_fraction
-            hist = print_histogram(sampleset, fig_size=5)
-            result['occurences'] = int(sampleset.first.num_occurrences)
-        result['energy'] = int(sampleset.first.energy)
-        nc = result_to_colors(G,sampleset.first.sample)
-        graph = print_graph(G, node_color=nc, fig_size=5)
-    else:
-        solver = 'local simulator'
-        token = ''
-        size = 20
-        seed = 42
-        communities = 4
-        max_weight = 10
-        num_reads = 1000
-        graph = None
-        hist = None
-        result = {}
-    return render(request, 'cd/index.html', {'graph':graph, 'result':result, 'seed':seed, 'vertices':size, 'token':token,
-                  'communities':communities, 'max_weight':max_weight, 'solvers':solvers, 'solver':solver, 'reads':num_reads, 'histogram':hist}) 
 
 def result_to_colors(G, sample):
     cs = np.zeros(len(G.nodes))
