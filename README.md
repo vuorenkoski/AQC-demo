@@ -16,13 +16,13 @@ python manage.py runserver
 ### Build
 
 ```
-sudo docker build -t aqc_demo:v0.5 .
+sudo docker build -t aqc_demo:v0.6 .
 ```
 
 ### Run
 
 ```
-sudo docker run -p 8000:8000 aqc_demo:v0.5
+sudo docker run -p 8000:8000 aqc_demo:v0.6
 ```
 
 After this command application can be accesses from address http://127.0.0.1:8000/
@@ -33,5 +33,5 @@ https://hub.docker.com/r/vuorenkoski/aqc_demo
 
 
 ```
-sudo docker pull vuorenkoski/aqc_demo:v0.5
+sudo docker pull vuorenkoski/aqc_demo:v0.6
 ```
