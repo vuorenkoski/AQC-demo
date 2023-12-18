@@ -1,6 +1,6 @@
 .border {
-    background-color: Chocolate;
-    color: white;
+    background-color: #fca311;
+    color: black;
 }
 
 .text-box {
@@ -8,21 +8,32 @@
     color: black;
 }
 
+.btn-primary {
+    background-color: #fca311;
+}
+
+.btn-primary:hover {
+    background-color: chocolate;
+}
+
+.btn-primary:disabled {
+    background-color: chocolate;
+}
+
 a.mp:link {
-    color: white;
+    color: black;
     text-decoration: none;
 }
 
 a.mp:visited {
-    color: white;
+    color: black;
 }
 
 a.mp:hover {
-    color: #ffcc00;
+    color: white;
 }
 
 .svg-tooltip {
-    font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple   Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
     background: rgba(69,77,93,.9);
     border-radius: .1rem;
     color: #fff;
@@ -35,4 +46,4 @@ a.mp:hover {
     white-space: pre;
     z-index: 300;
     visibility: hidden;
-  }
+  }  

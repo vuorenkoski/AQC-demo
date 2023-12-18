@@ -366,7 +366,7 @@ create_histogram = (hdata, target) => {
     // Append the bars.
     svg.append('g')
         .attr('class', 'bars')
-        .attr('fill', 'orange')
+        .attr('fill', '#fca311')
     .selectAll('rect')
     .data(hdata)
     .join('rect')

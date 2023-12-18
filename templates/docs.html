@@ -1,0 +1,62 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+    <title>AQC - Documentation</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+    <link rel="stylesheet" type="text/css" href="{% static 'styles.css' %}">
+    </head>
+
+    <body>
+    
+        <div class="container-fluid">    
+            <div class="row border">
+                <div class="col-sm-1">
+                    <br><br><br>
+                    <a class="mp" href="/"><p>Main Page</p></a>
+                    <a class="mp" href="/apsp"><p>All pairs shortest path</p></a>
+                    <a class="mp" href="/gi"><p>Graph isomorphism</p></a>
+                    <a class="mp" href="/cd"><p>Community detection</p></a>
+                    <a class="mp" href="/docs"><p>Documentation</p></a>
+                </div>
+                <div class="col-sm-11">
+                    <div class="row m-2">
+                        <div class="col-sm-12">    
+                            <h1>Documentation</h1>
+                        </div>
+                    </div>
+                    <div class="row m-1">
+                        <div class="col-sm-9 text-box rounded-top p-3">
+                            <h2>Graphs</h2>
+                            <p>Performance can be measured with variable types of graphs:</p>
+                            <ul>
+                                <li>Path graph: graph that can be drawn so that all of its vertices and edges lie on a single straight line</li>
+                                <li>Star graph: graph that have n-1 edges from single vertex to all other vertices/li>
+                                <li>Cycle graph: graph in which all vertices form single cycle.</li>
+                                <li>Complete graph: graph having all possible edges</li>
+                                <li>Tree graph: graph in which any two vertices are connected by exactly one path (here balanced binary tree is used).</li>
+                                <li>Graph with single cycle: graph in which part of the vertices and edges form a single cycle (here balanced binary tree with an edge from last leaf to the index vertex is used).</li>
+                                <li>Graph with multiple cycles: graph having multiple cycles (here balanced binary tree with with edges from every second leaf to the index vertex is used)./li>
+                                <li>Bipartite graph: graph which vertices can be divided in two sets so that all edges are between these two sets (here vertices are divided to even and odd vertices so that there are 2-4 edges from every even vertex to odd vertices).</li>
+                                <li>Wheel graph: graph formed by connecting one vertex to all other vertices which together form a cycle.</li>
+                                <li>Random graph: Random Erdos-Renyi (binomial) graph is constructed by NetworkX gnp_random_graph function with probability for edge creation 0.3 and seed 42. Each edge has random weight 1...10.</li>
+                                <li>Community graph: Vertices are divided to three (almost) equal size groups. Every group is itself a complete subgraph having weight of 5 edges. Two vertices from each group are connected (weight of 1) to two vertices in all other groups.  </li>
+                            </ul>
+                            <br><br><br>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <footer class="py-4 text-center">
+                            <p>Lauri Vuorenkoski, 2023</p>
+                        </footer>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </body>
+</html>

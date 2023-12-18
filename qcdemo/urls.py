@@ -24,6 +24,7 @@ urlpatterns = [
     path("gi/", include("gi.urls")),
     path("apsp/", include("apsp.urls")),
     path("", views.index),
+    path("docs", views.docs),
 #    path("admin/", admin.site.urls),
 ]
 

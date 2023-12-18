@@ -3,7 +3,7 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-    <title>Community detection</title>
+    <title>AQC - Community detection</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" type="text/css" href="{% static 'bootstrap.min.css' %}">
@@ -16,13 +16,17 @@
         <div class="container-fluid">    
             <div class="row border">
                 <div class="col-sm-1">
-                    <br>
+                    <br><br><br>
                     <a class="mp" href="/"><p>Main Page</p></a>
+                    <a class="mp" href="/apsp"><p>All pairs shorets path</p></a>
+                    <a class="mp" href="/gi"><p>Graph isomorphism</p></a>
+                    <a class="mp" href="/cd"><p>Community detection</p></a>
+                    <a class="mp" href="/docs"><p>Documentation</p></a>
                 </div>
                 <div class="col-sm-11">
                     <div class="row m-2">
                         <div class="col-sm-12">    
-                            <h1>Community detection- demo</h1>
+                            <h1>Community detection</h1>
                         </div>
                     </div>
                     <div class="row m-1">
@@ -118,12 +122,14 @@
                                 <br>
                             </form>
                         </div>
-                        <div class="col-sm-7 text-box m-1">    
+                        {% if gdata %}
+                        <div class="col-sm-7 text-box m-1" id="graph-section">    
                             <div id="graph_image"></div>
                         </div>
+                        {% endif %}
                     </div>                    
                     <div class="row m-0">
-                        <div class="col-sm-4 text-box m-1">   
+                        <div class="col-sm-4 text-box m-1" id="result-section">   
                             {% if result %}
                             <table class="table table-striped">
                                 <thead>
@@ -210,7 +216,7 @@
                             </table>
                             {% endif %}
                         </div>
-                        <div class="col-sm-7 text-box m-1">    
+                        <div class="col-sm-7 text-box m-1" id="histogram-section">    
                             <div id="histogram_image"></div>
                         </div>
                     </div>
@@ -241,9 +247,16 @@
         {% endif %}
 
         <script type="text/javascript">
+            function add_dot () {
+                document.getElementById("run-message").textContent += '.'
+            }
             document.getElementById("paramsForm").addEventListener("submit", (e) => {
               document.getElementById("submit-button").disabled = true;
-              document.getElementById("run-message").textContent = "Running...";
+              document.getElementById("run-message").textContent = "Running";
+              document.getElementById("result-section").remove();
+              document.getElementById("histogram-section").remove();
+              document.getElementById("graph-section").remove();
+              window.setInterval(add_dot, 1000);
             });
         </script>
     </body>
