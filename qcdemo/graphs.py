@@ -10,7 +10,6 @@
 
 import networkx as nx
 import random
-import matplotlib.pyplot as plt
 
 graph_types = ['path graph', 'star graph', 'cycle graph', 'complete graph', 'tree graph', 'single cycle graph', 
                'multiple cycle graph', 'bipartite graph', 'regular graph', 'wheel graph', 'friendship graph',
@@ -203,27 +202,3 @@ def graph_community(vertices,communities):
             G.add_weighted_edges_from([(c0[i],c0[j], 1)])
             G.add_weighted_edges_from([(c0[i]+1,c0[j]+1, 1)])
     return G
-
-def print_graph(G, fig_size=6):
-    pos = nx.spring_layout(G)
-    plt.figure(figsize=(fig_size, fig_size))
-    nx.draw_networkx_edges(G, pos)
-    nx.draw_networkx_nodes(G, pos)
-    nx.draw_networkx_labels(G, pos, font_color='white')
-    labels = nx.get_edge_attributes(G,'weight')
-    nx.draw_networkx_edge_labels(G,pos,edge_labels=labels)
-    plt.axis("off")
-    plt.show()
-
-def print_result_latex(table):
-    if table==[]:
-        print('Result set is empty')
-        return
-    v = table[0]['gtype']
-    for t in table:
-        if v!=t['gtype']:
-            v=t['gtype']
-            print('\\hline')
-        print('{} & {} & {} & {} & {} & {} & {} & {} & {} \\\\'
-              .format(t['gtype'], t['solver'], t['vertices'], t['logical_qubits'], t['physical_qubits'], 
-                      t['couplers'], t['samples'], t['time'], t['performance']))
