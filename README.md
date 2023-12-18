@@ -34,4 +34,5 @@ https://hub.docker.com/r/vuorenkoski/aqc_demo
 
 ```
 sudo docker pull vuorenkoski/aqc_demo:v0.6
+sudo docker run -p 8000:8000 vuorenkoski/aqc_demo:v0.6
 ```
