@@ -14,7 +14,7 @@
     <body>
     
         <div class="container-fluid">    
-            <div class="row border">
+            <div class="row bg-color">
                 <div class="col-sm-1">
                     <br><br><br>
                     <a class="mp" href="/"><p>Main Page</p></a>
@@ -23,13 +23,13 @@
                     {% endfor %}
                     <a class="mp" href="/docs"><p>Documentation</p></a>
                 </div>
-                <div class="col-sm-11">
-                    <div class="row m-2">
+                <div class="col-sm-11 mt-3">
+                    <div class="row m-1">
                         <div class="col-sm-12">    
                             <h1>{{algorithm}}</h1>
                         </div>
                     </div>
-                    <div class="row m-1">
+                    <div class="row m-0">
                         <div class="col-sm-11 text-box rounded-top p-3">    
                             <p>This demo runs algorithm with D-Wave leap local annealing simulator and quantum solver. 
                                 Beware, quantum solver can have long waiting-time to run if many qubits are needed.</p>
@@ -38,7 +38,7 @@
                         </div>
                     </div>
                     <div class="row m-0">
-                        <div class="col-sm-4 text-box m-1">    
+                        <div class="col-sm-4 text-box mt-2">    
 
                             <h2>Solver and graph parameters</h2>
                             <form action="" method="POST" id="paramsForm">
@@ -125,13 +125,13 @@
                             </form>
                         </div>
                         {% if gdata %}
-                        <div class="col-sm-7 text-box m-1" id="graph-section">    
-                            <div id="graph_image"></div>
+                        <div class="col-sm-7 mt-2 xborder" id="graph-section">    
+                            <div class="text-box" id="graph_image" ></div>
                         </div>
                         {% endif %}
                     </div>                    
                     <div class="row m-0">
-                        <div class="col-sm-4 text-box m-1" id="result-section">   
+                        <div class="col-sm-4 text-box mt-2" id="result-section">   
                             {% if result %}
                             <table class="table table-striped">
                                 <thead>
@@ -239,8 +239,8 @@
                             </table>
                             {% endif %}
                         </div>
-                        <div class="col-sm-7 text-box m-1" id="histogram-section">    
-                            <div id="histogram_image"></div>
+                        <div class="col-sm-7 mt-2 xborder" id="histogram-section">    
+                            <div class="text-box" id="histogram_image"></div>
                         </div>
                     </div>
                     <div class="row">

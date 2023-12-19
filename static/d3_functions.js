@@ -124,7 +124,7 @@ create_graph_dw = (data, colors, directed, weights, target) => {
         node.attr('transform', d => `translate(${d.x},${d.y})`);
         edgelabels.attr('rotate', d => (d.target.x>d.source.x) ? 0 : 180)
         if (weights==1) {
-//            edgelabels.selectAll('textPath').text(d => (d.target.x>d.source.x) ? d.type : d.type.split('').reverse().join(''))
+            edgelabels.selectAll('textPath').text(d => (d.target.x>d.source.x) ? d.type : d.type.split('').reverse().join(''))
         }
     });
     

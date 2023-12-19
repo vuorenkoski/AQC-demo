@@ -1,6 +1,12 @@
-.border {
+.bg-color {
     background-color: #fca311;
     color: black;
+}
+
+.xborder {
+    background-color:  #fca311;
+    padding-left: 0.5rem;
+    padding-right: 0;
 }
 
 .text-box {
