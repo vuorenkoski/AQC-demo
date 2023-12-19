@@ -71,7 +71,7 @@ def solve(bqm,resp):
         sampleset = EmbeddingComposite(machine).sample(bqm, num_reads=resp['num_reads']).aggregate()
         result['time'] = int(sampleset.info['timing']['qpu_access_time'] / 1000)
         result['physical_qubits'] = sum(len(x) for x in sampleset.info['embedding_context']['embedding'].values())
-        result['chainb'] = sampleset.first.chain_break_fraction
+        result['chainb'] = str(sampleset.first.chain_break_fraction)
         resp['hdata'] = hdata_to_json(sampleset)
 
     result['energy'] = int(sampleset.first.energy)
