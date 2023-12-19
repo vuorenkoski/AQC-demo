@@ -62,7 +62,7 @@ def index(request):
         resp['result'] = result
 
         # Create graph-data
-        resp['gdata'] = {'data': graph_to_json(G1), 'colors': [colors[0] for i in range(len(G1.nodes))], 'directed':1, 'weights':1}
+        resp['gdata'] = {'data': graph_to_json(G1), 'colors': [colors[0] for i in range(len(G1.nodes))], 'directed':0, 'weights':0}
 
     else:
         # These are initial parameters for web page

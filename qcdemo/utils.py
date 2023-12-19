@@ -17,7 +17,7 @@ def graph_to_json(G):
     data = []
     for e in G.edges(data=True):
         if 'weight' in e[2]:
-            data.append({'source':e[0],'target':e[1],'type':e[2]['weight']})
+            data.append({'source':e[0],'target':e[1],'type':str(e[2]['weight'])})
         else:
             data.append({'source':e[0],'target':e[1]})
     return JsonResponse(data, safe=False).content.decode('utf-8')

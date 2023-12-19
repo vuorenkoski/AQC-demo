@@ -83,6 +83,7 @@ create_graph_dw = (data, colors, directed, weights, target) => {
         .attr('class', 'edgelabel')
         .attr('id', function (d, i) {return 'edgelabel' + i})
         .attr('font-size', 16)
+        .attr('rotate', 0)
         .attr('fill', 'black');
     
     if (weights==1) {
@@ -90,7 +91,8 @@ create_graph_dw = (data, colors, directed, weights, target) => {
         .attr('xlink:href', function (d, i) {return '#pathx' + i})
         .style('pointer-events', 'none')
         .attr('startOffset', '50%')
-        .text(d => d.type);
+        .attr('text-anchor', 'middle')
+        .text(d => (d.type));
     }
     
     const node = svg.append('g')
@@ -120,6 +122,10 @@ create_graph_dw = (data, colors, directed, weights, target) => {
     simulation.on('tick', () => {
         link.attr('d', linkArc);
         node.attr('transform', d => `translate(${d.x},${d.y})`);
+        edgelabels.attr('rotate', d => (d.target.x>d.source.x) ? 0 : 180)
+        if (weights==1) {
+//            edgelabels.selectAll('textPath').text(d => (d.target.x>d.source.x) ? d.type : d.type.split('').reverse().join(''))
+        }
     });
     
     function linkArc(d) {
