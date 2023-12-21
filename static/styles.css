@@ -1,55 +1,55 @@
 .bg-color {
-    background-color: #fca311;
-    color: black;
+  background-color: #fca311;
+  color: black;
 }
 
 .xborder {
-    background-color:  #fca311;
-    padding-left: 0.5rem;
-    padding-right: 0;
+  background-color: #fca311;
+  padding-left: 0.5rem;
+  padding-right: 0;
 }
 
 .text-box {
-    background-color: white;
-    color: black;
+  background-color: white;
+  color: black;
 }
 
 .btn-primary {
-    background-color: #fca311;
+  background-color: #fca311;
 }
 
 .btn-primary:hover {
-    background-color: chocolate;
+  background-color: chocolate;
 }
 
 .btn-primary:disabled {
-    background-color: chocolate;
+  background-color: chocolate;
 }
 
 a.mp:link {
-    color: black;
-    text-decoration: none;
+  color: black;
+  text-decoration: none;
 }
 
 a.mp:visited {
-    color: black;
+  color: black;
 }
 
 a.mp:hover {
-    color: white;
+  color: white;
 }
 
 .svg-tooltip {
-    background: rgba(69,77,93,.9);
-    border-radius: .1rem;
-    color: #fff;
-    display: block;
-    font-size: 14px;
-    max-width: 320px;
-    padding: .2rem .4rem;
-    position: absolute;
-    text-overflow: ellipsis;
-    white-space: pre;
-    z-index: 300;
-    visibility: hidden;
-  }  
+  background: rgba(69, 77, 93, 0.9);
+  border-radius: 0.1rem;
+  color: #fff;
+  display: block;
+  font-size: 14px;
+  max-width: 320px;
+  padding: 0.2rem 0.4rem;
+  position: relative;
+  text-overflow: ellipsis;
+  white-space: pre;
+  z-index: 300;
+  visibility: hidden;
+}
