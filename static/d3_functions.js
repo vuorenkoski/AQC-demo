@@ -237,7 +237,11 @@ create_histogram = (hdata, target) => {
     .domain(d3.sort(hdata, (d) => d.energy).map((d) => d.energy))
     .range([marginLeft, width - marginRight])
     .padding(0.1);
-  const xAxis = d3.axisBottom(x).ticks(100).tickSizeOuter(0);
+
+  var tpc = 15 // Ticks in x axis
+
+  var xAxis = d3.axisBottom(x).tickValues(x.domain()
+      .filter((d,i) => !(i%Math.round(x.domain().filter((d) => x(d)>0).length / tpc))));
 
   const y = d3.scaleLinear()
     .domain([0, d3.max(hdata, (d) => d.num_occurrences)])
@@ -298,7 +302,7 @@ create_histogram = (hdata, target) => {
     ];
 
     svg.call(d3.zoom()
-        .scaleExtent([1, 8])
+        .scaleExtent([1, 6])
         .translateExtent(extent)
         .extent(extent)
         .on("zoom", zoomed)
@@ -308,10 +312,13 @@ create_histogram = (hdata, target) => {
       x.range(
         [marginLeft, width - marginRight].map((d) => event.transform.applyX(d))
       );
+      xAxis = d3.axisBottom(x).tickValues(x.domain()
+          .filter((d,i) => !(i%Math.round(x.domain().filter((d) => x(d)>0).length / tpc))));
       svg
         .selectAll(".bars rect")
-        .attr("x", (d) => x(d.energy))
-        .attr("width", x.bandwidth());
+        .attr("x", (d) => x(d.energy)>marginLeft ? x(d.energy):marginLeft)
+        .attr("width", (d) => x(d.energy)>marginLeft ? x.bandwidth(): 
+            x(d.energy)+x.bandwidth()>marginLeft ? x(d.energy)+x.bandwidth()-marginLeft:0);
       svg.selectAll(".x-axis").call(xAxis);
     }
   }
