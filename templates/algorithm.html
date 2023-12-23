@@ -16,7 +16,7 @@
   </head>
 
   <body>
-    <div class="d-flex">
+    <div class="container-fluid">
       <div class="row bg-color">
         <div class="col-sm-1">
           <br /><br /><br />
@@ -29,7 +29,7 @@
         <div class="col-sm-11 mt-3">
           <div class="row m-1">
             <div class="col-sm-12">
-              <h1>{{algorithm}}</h1>
+              <h1>AQC - {{algorithm}}</h1>
             </div>
           </div>
           <div class="row m-0">
@@ -269,9 +269,9 @@
           </div>
 
           <div class="row m-0">
-            <div class="col-sm-4 mt-2" id="paths-section">        
+            <div class="col-sm-4 m-0 p-0" id="paths-section">
               {% if result.paths %}
-              <div class="text-box">
+              <div class="text-box mt-2">
                 <h2>Shortest paths</h2>
                 <table class="table table-striped">
                   <thead>
