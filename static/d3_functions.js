@@ -1,3 +1,84 @@
+// Heatmap function
+create_heatmap = (data, size, target) => {
+  const rowHeight = 16;
+  const colWidth = 16;
+  const marginTop = 20;
+  const marginRight = 1;
+  const marginBottom = 1;
+  const marginLeft = 20;
+  const width = colWidth * size + marginLeft + marginRight;
+  const height = rowHeight * size + marginTop + marginBottom;
+
+  const svg = d3.select(target).append("svg")
+    .attr("viewBox", [0, 0, width, height])
+    .attr("viewBox", [0, 0, width, height])
+    .attr("width", width)
+    .attr("height", height)
+    .attr("style", "max-width: 100%; height: 100%;");
+
+  const x = d3.scaleLinear()
+    .domain([0, size])
+    .rangeRound([marginLeft, width - marginRight])
+
+  const y = d3.scaleLinear()
+    .domain([0, size])
+    .rangeRound([marginTop, height - marginBottom])
+
+  const pcolor = d3.scaleSequentialSqrt([0, d3.max(data, d => d3.max(d))], d3.interpolateRgb("white", "red"));
+  const ncolor = d3.scaleSequentialSqrt([0, d3.min(data, d => d3.min(d))], d3.interpolateRgb("white", "blue"));
+  
+  // Axes
+  svg.append("g")
+      .attr("transform", `translate(${colWidth/2},${marginTop})`)
+      .call(d3.axisTop(x).tickSize(0))
+      .call(g => g.select(".domain").remove());
+
+  svg.append("g")
+      .attr("transform", `translate(${marginLeft},${rowHeight/2})`)
+      .call(d3.axisLeft(y).tickSize(0))
+      .call(g => g.select(".domain").remove());
+
+  svg.append("g")
+    .selectAll("g")
+    .data(data)
+    .join("g")
+      .attr("transform", (d, i) => `translate(0,${marginTop+i*rowHeight})`)
+      .selectAll("rect")
+      .data((d,i) => d.map((x) => ({"data":x, "y":i})) )
+      .join("rect")
+        .attr("class", (d, i) => i>=d.y ? "hm-rect":"")
+        .attr("x", (d, i) => marginLeft+i*colWidth)
+        .attr("width", colWidth)
+        .attr("height", rowHeight)
+        .attr("stroke-width", "0")
+        .attr("fill", (d,i) => i<d.y ? "#eeeeee" : d.data<0 ? ncolor(d.data):pcolor(d.data))
+        .datum((d,i) => ({"data":d.data, "x":i, "y":d.y}))
+        .append("title")
+          .text((d, i) => i>=d.y ? `${(d.data).toFixed(1)} (${d.y},${i})`:"");
+
+  // TOOLTIP
+  const tooltip = d3.select("body").append("div")
+    .attr("class", "svg-tooltip")
+    .style("position", "absolute")
+    .style("visibility", "hidden");
+
+  d3.selectAll(".hm-rect")
+    .on("mouseover", function (event, d) {
+      d3.select(this).attr("stroke-width", "2").attr("stroke", "black");
+      tooltip.style("visibility", "visible")
+        .text(`Value: ${(d.data).toFixed(1)} (${d.y}:${d.x})`);
+    })
+    .on("mousemove", function (event, d) {
+      tooltip.style("top", event.pageY - 10 + "px")
+        .style("left", event.pageX + 10 + "px");
+    })
+    .on("mouseout", function () {
+      d3.select(this).attr("stroke-width", "0");
+      tooltip.style("visibility", "hidden");
+    });
+}
+
+// Graph function
 create_graph_dw = (data, colors, directed, weights, target) => {
   const width = 750;
   const height = 450;
@@ -32,33 +113,23 @@ create_graph_dw = (data, colors, directed, weights, target) => {
       .on("end", dragended);
   };
 
-  const simulation = d3
-    .forceSimulation(nodes)
-    .force(
-      "link",
-      d3
-        .forceLink(links)
-        .id((d) => d.id)
-        .distance(150)
-    )
+  const simulation = d3.forceSimulation(nodes)
+    .force("link", d3.forceLink(links).id((d) => d.id).distance(150))
     .force("charge", d3.forceManyBody().strength(-400))
     .force("x", d3.forceX())
     .force("y", d3.forceY());
 
-  const svg = d3
-    .select(target)
-    .append("svg")
+  const svg = d3.select(target).append("svg")
     .attr("viewBox", [-width / 2, -height / 2, width, height])
     .attr("width", width)
     .attr("height", height)
     .attr("style", "max-width: 100%; height: auto; font: 12px sans-serif;");
+
   var link;
   if (directed == 1) {
-    svg
-      .append("defs")
-      .selectAll("marker")
-      .data(links)
-      .join("marker")
+    svg.append("defs").selectAll("marker")
+    .data(links)
+    .join("marker")
       .attr("id", "arrow")
       .attr("viewBox", "0 -5 10 10")
       .attr("refX", 25)
@@ -67,80 +138,65 @@ create_graph_dw = (data, colors, directed, weights, target) => {
       .attr("markerHeight", 6)
       .attr("orient", "auto")
       .append("path")
-      .attr("fill", "orange")
-      .attr("d", "M0,-5L10,0L0,5");
+        .attr("fill", "orange")
+        .attr("d", "M0,-5L10,0L0,5");
 
-    link = svg
-      .append("g")
+    link = svg.append("g")
       .attr("fill", "none")
       .attr("stroke-width", 1.5)
       .selectAll("path")
       .data(links)
       .join("path")
-      .attr("stroke", "orange")
-      .attr("id", function (d, i) {
-        return "pathx" + i;
-      })
-      .attr("marker-end", `url(${new URL(`#arrow`, location)})`);
+        .attr("stroke", "orange")
+        .attr("id", (d, i) => "pathx" + i)
+        .attr("marker-end", `url(${new URL(`#arrow`, location)})`);
   } else {
-    link = svg
-      .append("g")
+    link = svg.append("g")
       .attr("fill", "none")
       .attr("stroke-width", 1.5)
       .selectAll("path")
       .data(links)
       .join("path")
-      .attr("stroke", "orange")
-      .attr("id", function (d, i) {
-        return "pathx" + i;
-      });
+        .attr("stroke", "orange")
+        .attr("id", (d, i) => "pathx" + i);
   }
 
-  const edgelabels = svg
-    .selectAll(".edgelabel")
+  const edgelabels = svg.selectAll(".edgelabel")
     .data(links)
     .enter()
-    .append("text")
-    .style("pointer-events", "none")
-    .attr("class", "edgelabel")
-    .attr("id", function (d, i) {
-      return "edgelabel" + i;
-    })
-    .attr("font-size", 16)
-    .attr("rotate", 0)
-    .attr("fill", "black");
+      .append("text")
+      .style("pointer-events", "none")
+      .attr("class", "edgelabel")
+      .attr("id", (d, i) => "edgelabel" + i)
+      .attr("font-size", 16)
+      .attr("rotate", 0)
+      .attr("fill", "black");
 
   if (weights == 1) {
-    edgelabels
-      .append("textPath")
-      .attr("xlink:href", function (d, i) {
-        return "#pathx" + i;
-      })
+    edgelabels.append("textPath")
+      .attr("xlink:href", (d, i) => "#pathx" + i)
       .style("pointer-events", "none")
       .attr("startOffset", "50%")
       .attr("text-anchor", "middle")
       .text((d) => d.type);
   }
 
-  const node = svg
-    .append("g")
+  const node = svg.append("g")
     .attr("fill", "currentColor")
     .attr("stroke-linecap", "round")
     .attr("stroke-linejoin", "round")
     .selectAll("g")
     .data(nodes)
     .join("g")
-    .call(drag(simulation));
+      .call(drag(simulation));
 
-  node
-    .append("circle")
+  node.append("circle")
     .attr("stroke", "black")
     .attr("fill", (d) => d.color)
     .attr("stroke-width", 1.5)
     .attr("r", 14);
 
-  node
-    .append("text")
+  node.append("text")
     .attr("x", -4)
     .attr("y", 4)
     .text((d) => d.id)
@@ -155,8 +211,7 @@ create_graph_dw = (data, colors, directed, weights, target) => {
     node.attr("transform", (d) => `translate(${d.x},${d.y})`);
     edgelabels.attr("rotate", (d) => (d.target.x > d.source.x ? 0 : 180));
     if (weights == 1) {
-      edgelabels
-        .selectAll("textPath")
+      edgelabels.selectAll("textPath")
         .text((d) =>
           d.target.x > d.source.x ? d.type : d.type.split("").reverse().join("")
         );
@@ -165,15 +220,12 @@ create_graph_dw = (data, colors, directed, weights, target) => {
 
   function linkArc(d) {
     const r = Math.hypot(d.target.x - d.source.x, d.target.y - d.source.y);
-    return `
-            M${d.source.x},${d.source.y}
-            A${r},${r} 0 0,1 ${d.target.x},${d.target.y}
-        `;
+    return `M${d.source.x},${d.source.y} A${r},${r} 0 0,1 ${d.target.x},${d.target.y}`;
   }
 };
 
+// Histogram function
 create_histogram = (hdata, target) => {
-  // Specify the chart’s dimensions.
   const width = 750;
   const height = 450;
   const marginTop = 40;
@@ -181,54 +233,42 @@ create_histogram = (hdata, target) => {
   const marginBottom = 40;
   const marginLeft = 40;
 
-  // Create the horizontal scale and its axis generator.
-  const x = d3
-    .scaleBand()
+  const x = d3.scaleBand()
     .domain(d3.sort(hdata, (d) => d.energy).map((d) => d.energy))
     .range([marginLeft, width - marginRight])
     .padding(0.1);
-
   const xAxis = d3.axisBottom(x).ticks(100).tickSizeOuter(0);
 
-  // Create the vertical scale.
-  const y = d3
-    .scaleLinear()
+  const y = d3.scaleLinear()
     .domain([0, d3.max(hdata, (d) => d.num_occurrences)])
     .nice()
     .range([height - marginBottom, marginTop]);
 
-  // Create the SVG container and call the zoom behavior.
-  const svg = d3
-    .select(target)
-    .append("svg")
+  const svg = d3.select(target).append("svg")
     .attr("viewBox", [0, 0, width, height])
     .attr("width", width)
     .attr("height", height)
     .attr("style", "max-width: 100%; height: auto;")
     .call(zoom);
 
-  // Append the bars.
-  svg
-    .append("g")
+  // Bars
+  svg.append("g")
     .attr("class", "bars")
     .attr("fill", "#fca311")
     .selectAll("rect")
     .data(hdata)
     .join("rect")
-    .attr("x", (d) => x(d.energy))
-    .attr("y", (d) => y(0))
-    .attr("height", (d) => 0)
-    .attr("width", x.bandwidth());
+      .attr("x", (d) => x(d.energy))
+      .attr("y", (d) => y(0))
+      .attr("height", (d) => 0)
+      .attr("width", x.bandwidth());
 
-  // Append the axes.
-  svg
-    .append("g")
+  // Axes
+  svg.append("g")
     .attr("class", "x-axis")
     .attr("transform", `translate(0,${height - marginBottom})`)
     .call(xAxis)
-    .call((g) =>
-      g
-        .append("text")
+    .call((g) => g.append("text")
         .attr("x", width)
         .attr("y", marginBottom - 5)
         .attr("fill", "currentColor")
@@ -237,15 +277,12 @@ create_histogram = (hdata, target) => {
         .attr("font-size", 16)
     );
 
-  svg
-    .append("g")
+  svg.append("g")
     .attr("class", "y-axis")
     .attr("transform", `translate(${marginLeft},0)`)
     .call(d3.axisLeft(y))
     .call((g) => g.select(".domain").remove())
-    .call((g) =>
-      g
-        .append("text")
+    .call((g) => g.append("text")
         .attr("x", -marginLeft)
         .attr("y", 20)
         .attr("fill", "currentColor")
@@ -260,9 +297,7 @@ create_histogram = (hdata, target) => {
       [width - marginRight, height - marginTop],
     ];
 
-    svg.call(
-      d3
-        .zoom()
+    svg.call(d3.zoom()
         .scaleExtent([1, 8])
         .translateExtent(extent)
         .extent(extent)
@@ -281,26 +316,21 @@ create_histogram = (hdata, target) => {
     }
   }
 
-  svg
-    .selectAll("rect")
+  svg.selectAll("rect")
     .transition()
     .duration(1800)
     .attr("y", (d) => y(d.num_occurrences))
     .attr("height", (d) => y(0) - y(d.num_occurrences));
 
   // TOOLTIP
-  const tooltip = d3
-    .select("body")
-    .append("div")
+  const tooltip = d3.select("body").append("div")
     .attr("class", "svg-tooltip")
     .style("position", "absolute")
     .style("visibility", "hidden");
 
   d3.selectAll("rect")
     .on("mouseover", function (event, d) {
-      // change the selection style
       d3.select(this).attr("stroke-width", "2").attr("stroke", "black");
-      // make the tooltip visible and update its text
       tooltip
         .style("visibility", "visible")
         .text(`Energy: ${d.energy}, Occurences: ${d.num_occurrences}`);
@@ -311,9 +341,7 @@ create_histogram = (hdata, target) => {
         .style("left", event.pageX + 10 + "px");
     })
     .on("mouseout", function () {
-      // change the selection style
       d3.select(this).attr("stroke-width", "0");
-
       tooltip.style("visibility", "hidden");
     });
 };

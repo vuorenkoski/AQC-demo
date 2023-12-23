@@ -6,7 +6,7 @@ from networkx import has_path, all_shortest_paths
 import numpy as np
 
 from qcdemo.graphs import create_graph
-from qcdemo.utils import basic_stats, solve, graph_to_json, colors, algorithms, graph_types
+from qcdemo.utils import basic_stats, solve, graph_to_json, Q_to_json, colors, algorithms, graph_types
 
 min_vertices = 5
 max_vertices = 20
@@ -45,7 +45,8 @@ def index(request):
         Q = create_qubo_apsp(G)
         bqm = create_bqm_apsp(Q, G)
         result = basic_stats(G,Q, bqm)
-
+        resp['qdata'] = {'data': Q_to_json(Q.tolist()), 'size':len(Q)}
+        
         # Solve
         try:
             r, sampleset = solve(bqm,resp)

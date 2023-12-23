@@ -16,7 +16,7 @@
   </head>
 
   <body>
-    <div class="container-fluid">
+    <div class="d-flex">
       <div class="row bg-color">
         <div class="col-sm-1">
           <br /><br /><br />
@@ -162,8 +162,9 @@
               </form>
             </div>
             {% if gdata %}
-            <div class="col-sm-7 d-flex mt-2 xborder" id="graph-section">
+            <div class="col-sm-7 mt-2 xborder" id="graph-section">
               <div class="text-box">
+                <h2>Graph</h2>
                 <div id="graph_image"></div>
               </div>
             </div>
@@ -172,6 +173,7 @@
           <div class="row m-0">
             <div class="col-sm-4 text-box mt-2" id="result-section">
               {% if result %}
+              <h2>Measurements</h2>
               <table class="table table-striped">
                 <thead>
                   <tr>
@@ -185,57 +187,68 @@
                     <td>Vertices</td>
                     <td>{{result.vertices}}</td>
                   </tr>
-                  {% endif %} {% if result.edges %}
+                  {% endif %} 
+                  {% if result.edges %}
                   <tr>
                     <td>Edges</td>
                     <td>{{result.edges}}</td>
                   </tr>
-                  {% endif %} {% if result.qubo_size %}
+                  {% endif %} 
+                  {% if result.qubo_size %}
                   <tr>
                     <td>Qubo size</td>
                     <td>{{result.qubo_size}}x{{result.qubo_size}}</td>
                   </tr>
-                  {% endif %} {% if result.chipset %}
+                  {% endif %} 
+                  {% if result.chipset %}
                   <tr>
                     <td>Chipset</td>
                     <td>{{result.chipset}}</td>
                   </tr>
-                  {% endif %} {% if result.logical_qubits %}
+                  {% endif %} 
+                  {% if result.logical_qubits %}
                   <tr>
                     <td>Logical qubits</td>
                     <td>{{result.logical_qubits}}</td>
                   </tr>
-                  {% endif %} {% if result.physical_qubits %}
+                  {% endif %} 
+                  {% if result.physical_qubits %}
                   <tr>
                     <td>Physical qubits</td>
                     <td>{{result.physical_qubits}}</td>
                   </tr>
-                  {% endif %} {% if result.couplers %}
+                  {% endif %} 
+                  {% if result.couplers %}
                   <tr>
                     <td>Couplers</td>
                     <td>{{result.couplers}}</td>
                   </tr>
-                  {% endif %} {% if result.time %}
+                  {% endif %} 
+                  {% if result.time %}
                   <tr>
                     <td>CPU/QPU Time</td>
                     <td>{{result.time}} ms</td>
                   </tr>
-                  {% endif %} {% if result.energy %}
+                  {% endif %} 
+                  {% if result.energy %}
                   <tr>
                     <td>Lowest energy</td>
                     <td>{{result.energy}}</td>
                   </tr>
-                  {% endif %} {% if result.exp_energy %}
+                  {% endif %} 
+                  {% if result.exp_energy %}
                   <tr>
                     <td>Expected energy</td>
                     <td>{{result.exp_energy}}</td>
                   </tr>
-                  {% endif %} {% if result.success %}
+                  {% endif %} 
+                  {% if result.success %}
                   <tr>
                     <td>Correctness</td>
                     <td>{{result.success}}</td>
                   </tr>
-                  {% endif %} {% if result.chainb %}
+                  {% endif %} 
+                  {% if result.chainb %}
                   <tr>
                     <td>Chain break fraction (lowest)</td>
                     <td>{{result.chainb}}</td>
@@ -243,32 +256,54 @@
                   {% endif %}
                 </tbody>
               </table>
-              {% endif %} {% if result.paths %}
-              <h2>Shortest paths</h2>
-              <table class="table table-striped">
-                <thead>
-                  <tr>
-                    <th scope="col">Nodes</th>
-                    <th scope="col">Path</th>
-                    <th scope="col">Weight</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for x in result.paths %}
-                  <tr>
-                    <td>{{ x.nodes }}</td>
-                    <td>{{ x.path }}</td>
-                    <td>{{ x.weight }}</td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
+              {% endif %} 
+            </div>
+            {% if qdata %}
+            <div class="col-sm-7 mt-2 xborder" id="heatmap-section">
+              <div class="text-box">
+                <h2>QUBO heatmap</h2>
+                <div class="text-box p-3" id="heatmap_image"></div>
+              </div>
+            </div>
+            {% endif %}
+          </div>
+
+          <div class="row m-0">
+            <div class="col-sm-4 text-box mt-2" id="paths-section">        
+              {% if result.paths %}
+              <div class="text-box">
+                <h2>Shortest paths</h2>
+                <table class="table table-striped">
+                  <thead>
+                    <tr>
+                      <th scope="col">Nodes</th>
+                      <th scope="col">Path</th>
+                      <th scope="col">Weight</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for x in result.paths %}
+                    <tr>
+                      <td>{{ x.nodes }}</td>
+                      <td>{{ x.path }}</td>
+                      <td>{{ x.weight }}</td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
               {% endif %}
             </div>
+            {% if hdata %}
             <div class="col-sm-7 mt-2 xborder" id="histogram-section">
-              <div class="text-box p-3" id="histogram_image"></div>
+              <div class="text-box">
+                <h2>Energy levels and occurences</h2>
+                <div class="text-box p-3" id="histogram_image"></div>
+              </div>
             </div>
+            {% endif %}
           </div>
+
           <div class="row">
             <footer class="py-4 text-center">
               <p>Lauri Vuorenkoski & Valter Uotila, 2023</p>
@@ -288,10 +323,18 @@
       var weights = {{ gdata.weights }}
       create_graph_dw(data, colors, directed, weights, "#graph_image")
     </script>
-    {% endif %} {% if hdata %}
+    {% endif %} 
+    {% if hdata %}
     <script type="text/javascript">
       var hdata = {{ hdata|safe }}
       create_histogram(hdata, "#histogram_image")
+    </script>
+    {% endif %}
+    {% if qdata %}
+    <script type="text/javascript">
+      var qdata = {{ qdata.data |safe }}
+      var size = {{ qdata.size }}
+      create_heatmap(qdata, size, "#heatmap_image")
     </script>
     {% endif %}
 
@@ -305,6 +348,8 @@
         document.getElementById("result-section").remove();
         document.getElementById("histogram-section").remove();
         document.getElementById("graph-section").remove();
+        document.getElementById("heatmap-section").remove();
+        document.getElementById("paths-section").remove();
         window.setInterval(add_dot, 1000);
       });
     </script>

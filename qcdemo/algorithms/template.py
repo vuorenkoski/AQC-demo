@@ -4,7 +4,7 @@ from dimod import BinaryQuadraticModel
 import numpy as np
 
 from qcdemo.graphs import create_graph
-from qcdemo.utils import basic_stats, solve, graph_to_json, colors, algorithms, graph_types
+from qcdemo.utils import basic_stats, solve, graph_to_json, Q_to_json, colors, algorithms, graph_types
 
 # Parameters for UI constraints 
 min_vertices = 5
@@ -44,6 +44,7 @@ def index(request):
         Q = create_qubo(G)
         bqm = create_bqm(Q, G)
         result = basic_stats(G,Q, bqm)
+        resp['qdata'] = {'data': Q_to_json(Q.tolist()), 'size':len(Q)}
 
         # Solve
         try:

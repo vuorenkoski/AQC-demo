@@ -22,6 +22,9 @@ def graph_to_json(G):
             data.append({'source':e[0],'target':e[1]})
     return JsonResponse(data, safe=False).content.decode('utf-8')
 
+def Q_to_json(G):
+    return JsonResponse(G, safe=False).content.decode('utf-8')
+
 def hdata_to_json(sampleset):
     data = {}
     maxv = int(sampleset.first.energy)

@@ -4,7 +4,7 @@ from dimod import BinaryQuadraticModel
 import numpy as np
 
 from qcdemo.graphs import create_graph
-from qcdemo.utils import basic_stats, solve, graph_to_json, graph_to_json, colors, algorithms, graph_types
+from qcdemo.utils import basic_stats, solve, graph_to_json, graph_to_json, Q_to_json, colors, algorithms, graph_types
 
 min_vertices = 5
 max_vertices = 20
@@ -47,6 +47,7 @@ def index(request):
         bqm = create_bqm_gi(Q, G1)
         result = basic_stats(G1,Q, bqm)
         result['exp_energy'] = -len(G1.edges)
+        resp['qdata'] = {'data': Q_to_json(Q.tolist()), 'size':len(Q)}
 
         # Solve
         try:
