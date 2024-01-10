@@ -82,7 +82,7 @@
                 </div>
                 <div class="row">
                   <div class="col-sm-4">
-                    <p>Numer of reads:</p>
+                    <p>Number of reads:</p>
                   </div>
                   <div class="col-sm-8">
                     <input
@@ -163,7 +163,7 @@
             </div>
             {% if gdata %}
             <div class="col-sm-7 mt-2 xborder" id="graph-section">
-              <div class="text-box">
+              <div class="text-box ps-2">
                 <h2>Graph</h2>
                 <div id="graph_image"></div>
               </div>
@@ -260,7 +260,7 @@
             </div>
             {% if qdata %}
             <div class="col-sm-7 mt-2 xborder" id="heatmap-section">
-              <div class="text-box">
+              <div class="text-box ps-2">
                 <h2>QUBO heatmap</h2>
                 <div class="text-box p-3" id="heatmap_image"></div>
               </div>
@@ -269,9 +269,9 @@
           </div>
 
           <div class="row m-0">
-            <div class="col-sm-4 m-0 p-0" id="paths-section">
+            <div class="col-sm-4 mt-2 text-box" id="paths-section">
               {% if result.paths %}
-              <div class="text-box mt-2">
+              <div>
                 <h2>Shortest paths</h2>
                 <table class="table table-striped">
                   <thead>
@@ -296,7 +296,7 @@
             </div>
             {% if hdata %}
             <div class="col-sm-7 mt-2 xborder" id="histogram-section">
-              <div class="text-box">
+              <div class="text-box ps-2">
                 <h2>Energy levels and occurences</h2>
                 <div class="text-box p-3" id="histogram_image"></div>
               </div>

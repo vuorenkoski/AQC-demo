@@ -70,7 +70,7 @@ def index(request):
         resp['num_reads'] = 2000
         resp['solver'] = 'local simulator'
         resp['token'] = ''
-        resp['graph_type'] = 'wheel graph'
+        resp['graph_type'] = 'random graph'
     return render(request, 'algorithm.html', resp) 
 
 def create_qubo_apsp(G):
