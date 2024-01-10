@@ -110,7 +110,7 @@ def create_qubo_apsp(G):
     for i in range(edges):
         for j in range(i+1,edges):
             if E[i][0]==E[j][0] or E[i][1]==E[j][1]:
-                Q[vertices*2+i,vertices*2+j] += 2*p
+                Q[vertices*2+i,vertices*2+j] += p
 
     # Constraint 7
     for i in range(edges):
