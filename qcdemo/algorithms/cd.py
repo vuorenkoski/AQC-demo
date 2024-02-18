@@ -18,7 +18,7 @@ solvers = ['local simulator', 'quantum solver', 'cloud hybrid solver']
 def index(request):
     resp = {}
     resp['algorithm'] = 'Community detection'
-    resp['correctness'] = 'Community graphs have three artificial communities. Correctness is measured by the difference of modularity value of the'\
+    resp['correctness'] = 'Community graphs have three artificial communities. Accuracy is measured by the difference of modularity value of the'\
          'outcome and the modularity value given of outcome of NetworkX function greedy_modularity_communities. If difference is 0.0, outcomes are'\
          'the same. More negative the value is, more poorer the modularity of the algorithms outcome was.'
     resp['algorithms'] = algorithms
@@ -56,7 +56,6 @@ def index(request):
         Q = create_qubo_cd(G, resp['communities'])
         bqm = create_bqm_gi(Q, G, resp['communities'])
         result = basic_stats(G,Q, bqm)
-        resp['qdata'] = {'data': Q_to_json(Q.tolist()), 'size':len(Q)}
 
         # Solve
         try:
@@ -67,6 +66,7 @@ def index(request):
             return render(request, 'algorithm.html', resp) 
 
         # Gather rest of results
+        resp['qdata'] = {'data': Q_to_json(Q.tolist()), 'size':len(Q)}
         result['energy'] = int(sampleset.first.energy)
         result['success'] = check_result_cd(G,sampleset,resp['communities'])
         resp['result'] = result

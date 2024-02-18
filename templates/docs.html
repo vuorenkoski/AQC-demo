@@ -30,13 +30,13 @@
           </div>
           <div class="row m-0">
             <div class="col-sm-9 text-box rounded-top p-3">
-              <p>This demo presents algorithms for solving certain graph problems using quantum annealer computer. Each problems are converted to QUBO which is then solved with three different type of D-Wave solvers: local simulator, quantum solver and hybrid solver. </p>
+              <p>This demo presents algorithms for solving certain graph problems using quantum annealer computer. Each problem is converted to QUBO which is then solved with three different type of D-Wave solvers: local simulator, quantum solver and hybrid solver. </p>
               <h2>Graph problems</h2>
               <ul>
                 <li>In all pairs shortest path problem task is to find path with minimum sum of weights for every 
                   pair of vertices in graph.</li>
-                <li>Graph isomrphism problem answers to the qustion are two graphs isomorphic. Two graphs are isomorphic if they have same
-                  structure, so that vertices from one graph can be mapped to vertices of the other graph so that
+                <li>Graph isomorphism problem answers to the question are two graphs isomorphic. Two graphs are isomorphic if they have same
+                  structure, meaning that vertices from one graph can be mapped to vertices of the other graph so that
                   vertices have the same connectivity.</li>
                   <li>Community detection algorithm identifies communities from graphs, so that edges between vertices in the same community would be maximised and edges between vertices in different communities would be minimised.</li>
               </ul>
@@ -44,55 +44,43 @@
               <p>Performance can be measured with variable types of graphs:</p>
               <ul>
                 <li>
-                  Path graph: graph that can be drawn so that all of its
-                  vertices and edges lie on a single straight line
+                  Path graph: a graph that can be drawn so that all of its vertices and edges lie on a single straight line.
                 </li>
                 <li>
-                  Star graph: graph that have n-1 edges from single vertex to
-                  all other vertices/li>
+                  Star graph: a graph that has n-1 edges from a single vertex to all other vertices.
                 </li>
                 <li>
-                  Cycle graph: graph in which all vertices form single cycle.
+                  Cycle graph: a graph in which all vertices and edges form a single cycle.
                 </li>
-                <li>Complete graph: graph having all possible edges</li>
+                <li>Complete graph: a graph having all possible edges.</li>
                 <li>
-                  Tree graph: graph in which any two vertices are connected by
-                  exactly one path (here balanced binary tree is used).
-                </li>
-                <li>
-                  Graph with single cycle: graph in which part of the vertices
-                  and edges form a single cycle (here balanced binary tree with
-                  an edge from last leaf to the index vertex is used).
+                  Tree graph: a graph in which any two vertices are connected by exactly one path (here balanced binary tree is used).
                 </li>
                 <li>
-                  Graph with multiple cycles: graph having multiple cycles (here
-                  balanced binary tree with with edges from every second leaf to
-                  the index vertex is used)./li>
+                  Graph with single cycle: a graph in which part of the vertices and edges form a single cycle (here balanced binary tree with an additional edge from the last leaf to the index vertex is used).
                 </li>
                 <li>
-                  Bipartite graph: graph which vertices can be divided in two
-                  sets so that all edges are between these two sets (here
-                  vertices are divided to even and odd vertices so that there
-                  are 2-4 edges from every even vertex to odd vertices).
+                  Graph with multiple cycles: a graph having multiple cycles (here balanced binary tree with with additional edges from every second leaf to the index vertex is used).
                 </li>
                 <li>
-                  Wheel graph: graph formed by connecting one vertex to all
-                  other vertices which together form a cycle.
+                  Bipartite graph: a graph in which vertices can be divided in two sets so that all edges are between these two sets (here vertices are divided into even and odd vertices so that there are 2-4 edges from every even vertex to odd vertices).
                 </li>
                 <li>
-                  Random graph: Random Erdos-Renyi (binomial) graph is
-                  constructed by NetworkX gnp_random_graph function with
-                  probability for edge creation 0.3 and seed 42. Each edge has
-                  random weight 1...10.
+                  Wheel graph: a graph formed by connecting one vertex to all other vertices which together form a cycle.
                 </li>
                 <li>
-                  Community graph: Vertices are divided to three (almost) equal
-                  size groups. Every group is itself a complete subgraph having
-                  weight of 5 edges. Two vertices from each group are connected
-                  (weight of 1) to two vertices in all other groups.
+                  Random graph: Random Erdos-Renyi (binomial) graph is constructed by NetworkX gnp_random_graph function with probability for edge creation 0.3 and seed 42. Each edge has random weight 1...10.
+                </li>
+                <li>
+                  Community graph: Vertices are divided into three (almost) equal-size groups. Every group is itself a complete subgraph in which each edge has a weight of 5. Two vertices from each group are connected (weight of 1) to two vertices in all other groups.  
                 </li>
               </ul>
               <p>For each of these graph types different size of graphs can be selected.</p>
+              <h2>D-wave documentation</h2>
+              <ul>
+                <li>D-wave Leap: <a href="https://docs.dwavesys.com/docs/latest/guides_leap.html">https://docs.dwavesys.com/docs/latest/guides_leap.html</a></li>
+                <li>D-wave solvers: <a href="https://docs.dwavesys.com/docs/latest/guides_solvers.html">https://docs.dwavesys.com/docs/latest/guides_solvers.html</a></li>
+              </ul>
               <br /><br /><br />
             </div>
           </div>

@@ -15,7 +15,7 @@ def index(request):
     resp = {}
     resp['algorithm'] = 'Graph isomorphism'
     resp['correctness'] = 'Algorithm is tested with generated graph and the same graph having its vertices randomly permutated. '\
-    'When working correctly, results should be isomorphic. Correctness is measured by how much observed '\
+    'When working correctly, results should be isomorphic. Accuracy is measured by how much observed '\
     'energy level differed from the correct energy level. So, for correct outcome this is 0 and more positive '\
     'this number is, more far away achieved energy level is from the correct energy level.'
     resp['algorithms'] = algorithms
@@ -47,7 +47,6 @@ def index(request):
         bqm = create_bqm_gi(Q, G1)
         result = basic_stats(G1,Q, bqm)
         result['exp_energy'] = -len(G1.edges)
-        resp['qdata'] = {'data': Q_to_json(Q.tolist()), 'size':len(Q)}
 
         # Solve
         try:
@@ -58,6 +57,7 @@ def index(request):
             return render(request, 'algorithm.html', resp) 
         
         # Gather rest of results    
+        resp['qdata'] = {'data': Q_to_json(Q.tolist()), 'size':len(Q)}
         result['energy'] = int(sampleset.first.energy)
         result['success'] = check_result_gi(sampleset, result['exp_energy'])
         resp['result'] = result

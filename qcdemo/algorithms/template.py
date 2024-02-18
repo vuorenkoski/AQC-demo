@@ -44,7 +44,6 @@ def index(request):
         Q = create_qubo(G)
         bqm = create_bqm(Q, G)
         result = basic_stats(G,Q, bqm)
-        resp['qdata'] = {'data': Q_to_json(Q.tolist()), 'size':len(Q)}
 
         # Solve
         try:
@@ -55,6 +54,7 @@ def index(request):
             return render(request, 'algorithm.html', resp) 
 
         # Gather rest of results    
+        resp['qdata'] = {'data': Q_to_json(Q.tolist()), 'size':len(Q)}
         result['success'] = check_result(G,sampleset)
         resp['result'] = result
 

@@ -35,14 +35,11 @@
           <div class="row m-0">
             <div class="col-sm-11 text-box rounded-top p-3">
               <p>
-                This demo runs algorithm with D-Wave leap local annealing
-                simulator and quantum solver. Beware, quantum solver can have
-                long waiting-time to run if many qubits are needed.
+                This demo runs algorithm with different types of D-Wave solvers. Beware, quantum solver can have long waiting-time to run if many qubits are needed.
               </p>
               <p>{{ correctness}}</p>
               <p>
-                Solver API token is needed if hybrid solver or quantum solver
-                are used.
+                Solver API token is needed if hybrid solver or quantum solver are used.
               </p>
             </div>
           </div>
@@ -244,7 +241,7 @@
                   {% endif %} 
                   {% if result.success %}
                   <tr>
-                    <td>Correctness</td>
+                    <td>Accuracy</td>
                     <td>{{result.success}}</td>
                   </tr>
                   {% endif %} 

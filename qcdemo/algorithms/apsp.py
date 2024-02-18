@@ -16,7 +16,7 @@ solvers = ['local simulator', 'quantum solver']
 def index(request):
     resp = {}
     resp['algorithm'] = 'All pairs of shortest path'
-    resp['correctness'] = 'Correctness is measured by counting what proportion of all shortest paths algorithm identified with correct sum of weights.'
+    resp['correctness'] = 'Accuracy is measured by counting what proportion of all shortest paths algorithm identified with correct sum of weights.'
     resp['algorithms'] = algorithms
     resp['solvers'] = solvers
     resp['graph_types'] = graph_types
@@ -45,7 +45,6 @@ def index(request):
         Q = create_qubo_apsp(G)
         bqm = create_bqm_apsp(Q, G)
         result = basic_stats(G,Q, bqm)
-        resp['qdata'] = {'data': Q_to_json(Q.tolist()), 'size':len(Q)}
         
         # Solve
         try:
@@ -56,6 +55,7 @@ def index(request):
             return render(request, 'algorithm.html', resp) 
 
         # Gather rest of results    
+        resp['qdata'] = {'data': Q_to_json(Q.tolist()), 'size':len(Q)}
         result['success'] = check_result_apsp(G,sampleset)
         result['paths'] = []
         for k,v in result_paths(G,sampleset).items():
