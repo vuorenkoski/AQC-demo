@@ -1,6 +1,6 @@
 # AQC demo
 
-This demo run some graph algorithms with quantum annealer (D-Wave).
+This demo run some graph algorithms with quantum annealer (D-Wave). More information on the algorithms and implementation: http://urn.fi/URN:NBN:fi:hulib-202403131494
 
 Framework: Python / Django / Gunicorn / Bootstrap / D3.js
 
