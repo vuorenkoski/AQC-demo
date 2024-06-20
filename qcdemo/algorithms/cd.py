@@ -34,6 +34,7 @@ def index(request):
         resp['vertices'] = int(request.POST['vertices'])
         resp['num_reads'] = int(request.POST['num_reads'])
         resp['solver'] = request.POST['solver']
+        resp['structure'] = request.POST['structure']
         resp['token'] = request.POST['token']
         resp['graph_type'] = request.POST['graph_type']
         resp['communities'] = int(request.POST['communities'])
@@ -52,7 +53,7 @@ def index(request):
             return render(request, 'cd/index.html', resp) 
 
         # create graph, qubo, bqm
-        G = create_graph(resp['graph_type'],resp['vertices'], weight=True, directed=False)
+        G = create_graph(resp['graph_type'], resp['vertices'], resp['structure'], weight=True, directed=False)
         Q = create_qubo_cd(G, resp['communities'])
         bqm = create_bqm_gi(Q, G, resp['communities'])
         result = basic_stats(G,Q, bqm)
@@ -78,6 +79,7 @@ def index(request):
         resp['vertices'] = 7
         resp['num_reads'] = 2000
         resp['solver'] = 'local simulator'
+        resp['structure'] = ''
         resp['token'] = ''
         resp['graph_type'] = 'community graph'
         resp['communities'] = 4

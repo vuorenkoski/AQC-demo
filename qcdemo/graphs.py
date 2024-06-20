@@ -15,7 +15,7 @@ graph_types = ['path graph', 'star graph', 'cycle graph', 'complete graph', 'tre
                'multiple cycle graph', 'bipartite graph', 'regular graph', 'wheel graph', 'friendship graph',
                'random graph']
     
-def create_graph(name, vertices, weight=False, directed=True, permutation=False):
+def create_graph(name, vertices, structure, weight=False, directed=True, permutation=False):
     if name=='path graph':
         E = graph_path(vertices)
     elif name=='star graph':
@@ -51,6 +51,16 @@ def create_graph(name, vertices, weight=False, directed=True, permutation=False)
             return G
     elif name=='community graph':
             return graph_community(vertices,3)
+    elif name=='manual':
+        lines = structure.split(', ')
+        create_using = nx.DiGraph() if directed else nx.Graph()
+        G = nx.parse_edgelist(lines, nodetype=int, data=(("weight", int),), create_using=create_using)
+        if permutation:
+            mapping = dict(zip(G.nodes(), sorted(G.nodes(), key=lambda k: random.random())))
+            GP = nx.relabel_nodes(G, mapping)
+            return (G, GP)
+        else:
+            return G
     else:
         E = []
     if E==[]:

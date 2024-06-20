@@ -28,6 +28,7 @@ def index(request):
         resp['vertices'] = int(request.POST['vertices'])
         resp['num_reads'] = int(request.POST['num_reads'])
         resp['solver'] = request.POST['solver']
+        resp['structure'] = request.POST['structure']
         resp['token'] = request.POST['token']
         resp['graph_type'] = request.POST['graph_type']
 
@@ -41,7 +42,8 @@ def index(request):
             return render(request, 'apsp/index.html', resp) 
 
         # create graph, qubo, bqm
-        G = create_graph(resp['graph_type'],resp['vertices'], weight=True, directed=True)
+        G = create_graph(resp['graph_type'], resp['vertices'], resp['structure'], weight=True, directed=True)
+        print(G.nodes)
         Q = create_qubo_apsp(G)
         bqm = create_bqm_apsp(Q, G)
         result = basic_stats(G,Q, bqm)
@@ -67,6 +69,7 @@ def index(request):
     else:
         # These are initial parameters for web page
         resp['vertices'] = 7
+        resp['structure'] = ''
         resp['num_reads'] = 2000
         resp['solver'] = 'local simulator'
         resp['token'] = ''

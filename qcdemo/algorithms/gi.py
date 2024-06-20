@@ -29,6 +29,7 @@ def index(request):
         resp['vertices'] = int(request.POST['vertices'])
         resp['num_reads'] = int(request.POST['num_reads'])
         resp['solver'] = request.POST['solver']
+        resp['structure'] = request.POST['structure']
         resp['token'] = request.POST['token']
         resp['graph_type'] = request.POST['graph_type']
 
@@ -42,7 +43,7 @@ def index(request):
             return render(request, 'gi/index.html', resp) 
 
         # create graph, qubo, bqm
-        G1, G2 = create_graph(resp['graph_type'],resp['vertices'], weight=False, directed=False, permutation=True)
+        G1, G2 = create_graph(resp['graph_type'], resp['vertices'], resp['structure'], weight=False, directed=False, permutation=True)
         Q = create_qubo_gi(G1,G2)
         bqm = create_bqm_gi(Q, G1)
         result = basic_stats(G1,Q, bqm)
@@ -71,6 +72,7 @@ def index(request):
         resp['vertices'] = 7
         resp['num_reads'] = 2000
         resp['solver'] = 'local simulator'
+        resp['structure'] = ''
         resp['token'] = ''
         resp['graph_type'] = 'wheel graph'
     return render(request, 'algorithm.html', resp) 

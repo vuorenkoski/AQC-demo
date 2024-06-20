@@ -9,7 +9,7 @@ algorithms = [{'name':'All pairs shortest paths', 'short':'apsp'},
               {'name':'Community detection', 'short':'cd'}]
 
 graph_types = ['path graph', 'star graph', 'cycle graph', 'complete graph', 'tree graph', 'single cycle graph', 
-               'multiple cycle graph', 'bipartite graph', 'wheel graph', 'community graph', 'random graph']
+               'multiple cycle graph', 'bipartite graph', 'wheel graph', 'community graph', 'random graph', 'manual']
 
 colors = ['#ffffff','#fbb4ae','#b3cde3','#ccebc5','#decbe4','#fed9a6','#ffffcc','#e5d8bd','#fddaec','#f2f2f2']
 
