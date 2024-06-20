@@ -245,6 +245,12 @@
                     <td>{{result.success}}</td>
                   </tr>
                   {% endif %} 
+                  {% if result.result %}
+                  <tr>
+                    <td>Result</td>
+                    <td>{{result.result}}</td>
+                  </tr>
+                  {% endif %} 
                   {% if result.chainb %}
                   <tr>
                     <td>Chain break fraction (lowest)</td>
@@ -303,7 +309,7 @@
 
           <div class="row">
             <footer class="py-4 text-center">
-              <p>Lauri Vuorenkoski & Valter Uotila, 2023</p>
+              <p>Lauri Vuorenkoski & Valter Uotila, 2024</p>
             </footer>
           </div>
         </div>

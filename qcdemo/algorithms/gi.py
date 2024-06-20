@@ -59,7 +59,8 @@ def index(request):
         # Gather rest of results    
         resp['qdata'] = {'data': Q_to_json(Q.tolist()), 'size':len(Q)}
         result['energy'] = int(sampleset.first.energy)
-        result['success'] = check_result_gi(sampleset, result['exp_energy'])
+        result['success'] = str(result['energy'] - result['exp_energy'])
+        result['result'] = check_result_gi(sampleset, result['exp_energy'])
         resp['result'] = result
 
         # Create graph-data
