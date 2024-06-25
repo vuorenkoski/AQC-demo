@@ -43,12 +43,16 @@ def index(request):
             return render(request, 'gi/index.html', resp) 
 
         # create graph, qubo, bqm
-        G1, G2 = create_graph(resp['graph_type'], resp['vertices'], resp['structure'], weight=False, directed=False, permutation=True)
-        Q = create_qubo_gi(G1,G2)
-        bqm = create_bqm_gi(Q, G1)
-        result = basic_stats(G1,Q, bqm)
-        result['exp_energy'] = -len(G1.edges)
-
+        try:
+            G1, G2 = create_graph(resp['graph_type'], resp['vertices'], resp['structure'], weight=False, directed=False, permutation=True)
+            Q = create_qubo_gi(G1,G2)
+            bqm = create_bqm_gi(Q, G1)
+            result = basic_stats(G1,Q, bqm)
+            result['exp_energy'] = -len(G1.edges)
+        except Exception as err:
+            resp['error'] = 'error in graph structure'
+            return render(request, 'algorithm.html', resp) 
+            
         # Solve
         try:
             r, sampleset = solve(bqm,resp)

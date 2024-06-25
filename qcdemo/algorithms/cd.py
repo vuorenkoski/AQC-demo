@@ -53,11 +53,15 @@ def index(request):
             return render(request, 'cd/index.html', resp) 
 
         # create graph, qubo, bqm
-        G = create_graph(resp['graph_type'], resp['vertices'], resp['structure'], weight=True, directed=False)
-        Q = create_qubo_cd(G, resp['communities'])
-        bqm = create_bqm_gi(Q, G, resp['communities'])
-        result = basic_stats(G,Q, bqm)
-
+        try:
+            G = create_graph(resp['graph_type'], resp['vertices'], resp['structure'], weight=True, directed=False)
+            Q = create_qubo_cd(G, resp['communities'])
+            bqm = create_bqm_gi(Q, G, resp['communities'])
+            result = basic_stats(G,Q, bqm)
+        except Exception as err:
+            resp['error'] = 'error in graph structure'
+            return render(request, 'algorithm.html', resp) 
+            
         # Solve
         try:
             r, sampleset = solve(bqm,resp)

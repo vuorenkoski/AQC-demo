@@ -44,7 +44,7 @@ def create_graph(name, vertices, structure, weight=False, directed=True, permuta
     elif name=='community graph':
         return graph_community(vertices,3)
     elif name=='manual':
-        lines = structure.split(', ')
+        lines = structure.split(',')
         create_using = nx.DiGraph() if directed else nx.Graph()
         G = nx.parse_edgelist(lines, nodetype=int, data=(("weight", int),), create_using=create_using)
         if permutation:

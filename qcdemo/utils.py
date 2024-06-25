@@ -53,6 +53,11 @@ def basic_stats(G,Q, bqm):
     result['qubo_size'] = Q.shape[0]
     result['logical_qubits'] = Q.shape[0]
     result['couplers'] = len(bqm.quadratic)
+
+    for n in G.nodes:
+        if n>=result['vertices']:
+            raise Exception() 
+
     return result
 
 def solve(bqm,resp):

@@ -42,11 +42,15 @@ def index(request):
             return render(request, 'apsp/index.html', resp) 
 
         # create graph, qubo, bqm
-        G = create_graph(resp['graph_type'], resp['vertices'], resp['structure'], weight=True, directed=True)
-        Q = create_qubo_apsp(G)
-        bqm = create_bqm_apsp(Q, G)
-        result = basic_stats(G,Q, bqm)
-        
+        try:
+            G = create_graph(resp['graph_type'], resp['vertices'], resp['structure'], weight=True, directed=True)
+            Q = create_qubo_apsp(G)
+            bqm = create_bqm_apsp(Q, G)
+            result = basic_stats(G,Q, bqm)
+        except Exception as err:
+            resp['error'] = 'error in graph structure'
+            return render(request, 'algorithm.html', resp) 
+
         # Solve
         try:
             r, sampleset = solve(bqm,resp)
