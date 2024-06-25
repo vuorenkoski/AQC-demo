@@ -9,7 +9,7 @@ from qcdemo.utils import basic_stats, solve, graph_to_json, graph_to_json, Q_to_
 min_vertices = 5
 max_vertices = 20
 max_num_reads = 10000
-solvers = ['local simulator', 'quantum solver', 'cloud hybrid solver']
+solvers = ['local simulator', 'cloud hybrid solver', 'Advantage_system4.1', 'Advantage_system5.4', 'Advantage_system6.4']
 
 def index(request):
     resp = {}
@@ -52,7 +52,7 @@ def index(request):
         except Exception as err:
             resp['error'] = 'error in graph structure'
             return render(request, 'algorithm.html', resp) 
-            
+
         # Solve
         try:
             r, sampleset = solve(bqm,resp)

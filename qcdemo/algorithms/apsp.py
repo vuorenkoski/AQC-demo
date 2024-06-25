@@ -11,7 +11,7 @@ from qcdemo.utils import basic_stats, solve, graph_to_json, Q_to_json, colors, a
 min_vertices = 5
 max_vertices = 20
 max_num_reads = 10000
-solvers = ['local simulator', 'quantum solver']
+solvers = ['local simulator', 'Advantage_system4.1', 'Advantage_system5.4', 'Advantage_system6.4']
 
 def index(request):
     resp = {}

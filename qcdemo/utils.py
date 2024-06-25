@@ -73,8 +73,9 @@ def solve(bqm,resp):
         sampleset = LeapHybridSampler(token=resp['token']).sample(bqm).aggregate()
         result['time'] = int(sampleset.info['qpu_access_time'] / 1000)
 
-    elif resp['solver'] =='quantum solver':
-        machine = DWaveSampler(token=resp['token'])
+    else:
+        qsolver = resp['solver']
+        machine = DWaveSampler(token=resp['token'], solver=qsolver)
         result['chipset'] = machine.properties['chip_id']
         sampleset = EmbeddingComposite(machine).sample(bqm, num_reads=resp['num_reads']).aggregate()
         result['time'] = int(sampleset.info['timing']['qpu_access_time'] / 1000)

@@ -13,7 +13,7 @@ max_vertices = 20
 min_communities = 1
 max_communities = 10
 max_num_reads = 10000
-solvers = ['local simulator', 'quantum solver', 'cloud hybrid solver']
+solvers = ['local simulator', 'cloud hybrid solver', 'Advantage_system4.1', 'Advantage_system5.4', 'Advantage_system6.4']
 
 def index(request):
     resp = {}
@@ -61,7 +61,7 @@ def index(request):
         except Exception as err:
             resp['error'] = 'error in graph structure'
             return render(request, 'algorithm.html', resp) 
-            
+
         # Solve
         try:
             r, sampleset = solve(bqm,resp)
