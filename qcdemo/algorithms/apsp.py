@@ -43,7 +43,6 @@ def index(request):
 
         # create graph, qubo, bqm
         G = create_graph(resp['graph_type'], resp['vertices'], resp['structure'], weight=True, directed=True)
-        print(G.nodes)
         Q = create_qubo_apsp(G)
         bqm = create_bqm_apsp(Q, G)
         result = basic_stats(G,Q, bqm)

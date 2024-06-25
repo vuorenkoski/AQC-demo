@@ -11,10 +11,6 @@
 import networkx as nx
 import random
 
-graph_types = ['path graph', 'star graph', 'cycle graph', 'complete graph', 'tree graph', 'single cycle graph', 
-               'multiple cycle graph', 'bipartite graph', 'regular graph', 'wheel graph', 'friendship graph',
-               'random graph']
-    
 def create_graph(name, vertices, structure, weight=False, directed=True, permutation=False):
     if name=='path graph':
         E = graph_path(vertices)
@@ -32,12 +28,8 @@ def create_graph(name, vertices, structure, weight=False, directed=True, permuta
         E = graph_multiple_cycle(vertices)
     elif name=='bipartite graph':
         E = graph_bipartite(vertices)
-    elif name=='regular graph':
-        E = graph_regular(vertices)
     elif name=='wheel graph':
         E = graph_wheel(vertices)
-    elif name=='friendship graph':
-        E = graph_friendship(vertices)
     elif name=='random graph':
         G = nx.gnp_random_graph(vertices, 0.30, seed=42, directed=directed)
         if weight:
@@ -50,7 +42,7 @@ def create_graph(name, vertices, structure, weight=False, directed=True, permuta
         else:
             return G
     elif name=='community graph':
-            return graph_community(vertices,3)
+        return graph_community(vertices,3)
     elif name=='manual':
         lines = structure.split(', ')
         create_using = nx.DiGraph() if directed else nx.Graph()
@@ -175,9 +167,6 @@ def graph_bipartite(vertices):
             E.append((i*2,i*2-3))
     return E
 
-def graph_regular(vertices):
-    return []
-
 def graph_wheel(vertices):
     if vertices<4:
         return []
@@ -185,9 +174,6 @@ def graph_wheel(vertices):
     for i in range(vertices-1):
         E.append((vertices-1,i))
     return E
-
-def graph_friendship(vertices):
-    return []
 
 def graph_community(vertices,communities): 
     G = nx.Graph()
