@@ -54,9 +54,16 @@ def basic_stats(G,Q, bqm):
     result['logical_qubits'] = Q.shape[0]
     result['couplers'] = len(bqm.quadratic)
 
+    # No negative weights
+    for e in G.edges(data=True):
+        if e[2]['weight']<0:
+            raise Exception()
+
+    # There must be atleast one edge and two vertices
     if result['edges']<1 or result['vertices']<2:
         raise Exception() 
 
+    # Nodes should be numbered from 0..n-1
     for n in G.nodes:
         if n<0 or n>=result['vertices']:
             raise Exception() 
