@@ -14,10 +14,10 @@ solvers = ['local simulator', 'cloud hybrid solver', 'Advantage_system4.1', 'Adv
 def index(request):
     resp = {}
     resp['algorithm'] = 'Graph isomorphism'
-    resp['correctness'] = 'Algorithm is tested with generated graph and the same graph having its vertices randomly permutated. '\
-    'When working correctly, results should be isomorphic. Accuracy is measured by how much observed '\
-    'energy level differed from the correct energy level. So, for correct outcome this is 0 and more positive '\
-    'this number is, more far away achieved energy level is from the correct energy level.'
+    resp['correctness'] = 'The algorithm is tested with the defined graph and the same graph having its vertices randomly permutated. '\
+    'When working correctly, result should indicate that the graphs are isomorphic. The accuracy is measured by how much observed '\
+    'energy level differed from the correct energy level. So, for correct outcome this is 0. More positive '\
+    'this indicator is, more far away achieved energy level is from the correct energy level.'
     resp['algorithms'] = algorithms
     resp['solvers'] = solvers
     resp['graph_types'] = graph_types

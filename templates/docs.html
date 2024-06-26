@@ -17,9 +17,9 @@
         <div class="col-sm-1">
           <br /><br /><br />
           <a class="mp" href="/"><p>Main Page</p></a>
-          <a class="mp" href="/apsp"><p>All pairs shortest path</p></a>
-          <a class="mp" href="/gi"><p>Graph isomorphism</p></a>
-          <a class="mp" href="/cd"><p>Community detection</p></a>
+          {% for a in algorithms %}
+          <a class="mp" href="/{{a.short}}"><p>{{a.name}}</p></a>
+          {% endfor %}
           <a class="mp" href="/docs"><p>Documentation</p></a>
         </div>
         <div class="col-sm-11 mt-3">
@@ -30,19 +30,19 @@
           </div>
           <div class="row m-0">
             <div class="col-sm-9 text-box rounded-top p-3">
-              <p>This demo presents algorithms for solving certain graph problems using quantum annealer computer. Each problem is converted to QUBO which is then solved with three different type of D-Wave solvers: local simulator, quantum solver and hybrid solver. </p>
+              <p>This demo presents algorithms for solving certain graph problems using quantum annealer computer. Each problem is converted to QUBO which is then solved with three different type of D-Wave solvers: local simulator, quantum solvers and hybrid solver. </p>
               <p>More information on the algorithms and implementation: <a href="http://urn.fi/URN:NBN:fi:hulib-202403131494" target="_blank">http://urn.fi/URN:NBN:fi:hulib-202403131494</a></p>
               <h2>Graph problems</h2>
               <ul>
-                <li>In all pairs shortest path problem task is to find path with minimum sum of weights for every 
-                  pair of vertices in graph.</li>
-                <li>Graph isomorphism problem answers to the question are two graphs isomorphic. Two graphs are isomorphic if they have same
-                  structure, meaning that vertices from one graph can be mapped to vertices of the other graph so that
-                  vertices have the same connectivity.</li>
-                  <li>Community detection algorithm identifies communities from graphs, so that edges between vertices in the same community would be maximised and edges between vertices in different communities would be minimised.</li>
+                <li>In the all pairs shortest path problem task is to find a path with minimum sum of the weights for every 
+                  pair of vertices in the graph.</li>
+                <li>The Graph isomorphism problem answers to the question are two graphs isomorphic. Two graphs are isomorphic if the graphs have same
+                  structure, meaning that the vertices from one graph can be mapped to the vertices of the other graph so that
+                  the vertices have the same connectivity.</li>
+                  <li>The Community detection algorithm identifies communities from graphs, so that edges between vertices in the same community would be maximised and edges between vertices in different communities would be minimised.</li>
               </ul>
               <h2>Graphs</h2>
-              <p>Performance can be measured with variable types of graphs:</p>
+              <p>The performance can be measured with variable types of graphs:</p>
               <ul>
                 <li>
                   Path graph: a graph that can be drawn so that all of its vertices and edges lie on a single straight line.
@@ -73,10 +73,10 @@
                   Random graph: Random Erdos-Renyi (binomial) graph is constructed by NetworkX gnp_random_graph function with probability for edge creation 0.3 and seed 42. Each edge has random weight 1...10.
                 </li>
                 <li>
-                  Community graph: Vertices are divided into three (almost) equal-size groups. Every group is itself a complete subgraph in which each edge has a weight of 5. Two vertices from each group are connected (weight of 1) to two vertices in all other groups.  
+                  Community graph: A graph where vertices are divided into three (almost) equal-size groups. Every group is itself a complete subgraph in which each edge has a weight of 5. Two vertices from each group are connected (weight of 1) to two vertices in all other groups.  
                 </li>
                 <li>
-                  Manual: Strucutre of the graph must be inserted as a single string. Format of the string: "node1 node2 weight1, node3 node4 weight2". Nodes should be named from 0 to n, where n is the number of nodes. Example: "0 1 3, 0 2 5, 0 3 6, 2 3 1"
+                  Manual graph: User can define the structure of the graph. Strucutre must be inserted as a single string. Format of the string: "node1 node2 weight1, node3 node4 weight2". Nodes should be named from 0 to n-1, where n is the number of nodes. Example: "0 1 3, 0 2 5, 0 3 6, 2 3 1"
                 </li>
               </ul>
               <p>For each of these graph types different size of graphs can be selected.</p>

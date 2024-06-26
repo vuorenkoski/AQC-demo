@@ -16,7 +16,7 @@ solvers = ['local simulator', 'Advantage_system4.1', 'Advantage_system5.4', 'Adv
 def index(request):
     resp = {}
     resp['algorithm'] = 'All pairs of shortest path'
-    resp['correctness'] = 'Accuracy is measured by counting what proportion of all shortest paths algorithm identified with correct sum of weights.'
+    resp['correctness'] = 'The accuracy is measured by counting what proportion of all shortest paths the algorithm identifies with correct sum of weights.'
     resp['algorithms'] = algorithms
     resp['solvers'] = solvers
     resp['graph_types'] = graph_types

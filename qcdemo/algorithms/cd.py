@@ -18,9 +18,8 @@ solvers = ['local simulator', 'cloud hybrid solver', 'Advantage_system4.1', 'Adv
 def index(request):
     resp = {}
     resp['algorithm'] = 'Community detection'
-    resp['correctness'] = 'Community graphs have three artificial communities. Accuracy is measured by the difference of modularity value of the'\
-         'outcome and the modularity value given of outcome of NetworkX function greedy_modularity_communities. If difference is 0.0, outcomes are'\
-         'the same. More negative the value is, more poorer the modularity of the algorithms outcome was.'
+    resp['correctness'] = 'Community graphs have three artificial communities. The accuracy is measured by the difference of modularity value of the'\
+         'outcome and the modularity value given of outcome of NetworkX function greedy_modularity_communities. More negative the value is, more poorer the modularity of the algorithms outcome was.'
     resp['algorithms'] = algorithms
     resp['solvers'] = solvers
     resp['graph_types'] = graph_types

@@ -4,12 +4,12 @@ from dwave.system import DWaveSampler, EmbeddingComposite, LeapHybridSampler
 from dwave.samplers import SimulatedAnnealingSampler
 import dwave.inspector
 
-algorithms = [{'name':'All pairs shortest paths', 'short':'apsp'}, 
+algorithms = [{'name':'All pairs shortest path', 'short':'apsp'}, 
               {'name':'Graph isomorphism', 'short':'gi'},
               {'name':'Community detection', 'short':'cd'}]
 
 graph_types = ['path graph', 'star graph', 'cycle graph', 'complete graph', 'tree graph', 'single cycle graph', 
-               'multiple cycle graph', 'bipartite graph', 'wheel graph', 'community graph', 'random graph', 'manual']
+               'multiple cycle graph', 'bipartite graph', 'wheel graph', 'community graph', 'random graph', 'manual graph']
 
 colors = ['#ffffff','#fbb4ae','#b3cde3','#ccebc5','#decbe4','#fed9a6','#ffffcc','#e5d8bd','#fddaec','#f2f2f2']
 
@@ -54,8 +54,11 @@ def basic_stats(G,Q, bqm):
     result['logical_qubits'] = Q.shape[0]
     result['couplers'] = len(bqm.quadratic)
 
+    if result['edges']<1 or result['vertices']<2:
+        raise Exception() 
+
     for n in G.nodes:
-        if n>=result['vertices']:
+        if n<0 or n>=result['vertices']:
             raise Exception() 
 
     return result

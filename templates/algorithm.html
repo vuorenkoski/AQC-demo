@@ -35,13 +35,13 @@
           <div class="row m-0">
             <div class="col-sm-11 text-box rounded-top p-3">
               <p>
-                This demo runs algorithm with different types of D-Wave solvers. Quantum solver can have long waiting-time to 
-                run if many qubits are needed. Demo can be run in three different D-Wave quantum solvers: Advantage_system4.1,
-                Advantage_system5.4 and Advantage_system6.4. However, they are not necessarily all available.
+                This demo runs the {{algorithm}} algorithm with the D-Wave leap
+                heuristic local annealing simulator, and with the D-wave hybrid solver and quantum solvers in the cloud. 
+                
               </p>
               <p>{{ correctness}}</p>
               <p>
-                Solver API token is needed if hybrid solver or quantum solver are used.
+                The Solver API token is needed if hybrid solver or quantum solvers are used.
               </p>
             </div>
           </div>
@@ -374,7 +374,7 @@
 
 
       document.getElementById("graph_type").addEventListener("change", (e) => {
-        manual = document.getElementById("graph_type").value == "manual";
+        manual = document.getElementById("graph_type").value == "manual graph";
         if (manual) {
           document.getElementById("vertices").hidden = true;
           document.getElementById("structure").hidden = false;
@@ -384,7 +384,7 @@
         }
       });
 
-      manual = document.getElementById("graph_type").value == "manual";
+      manual = document.getElementById("graph_type").value == "manual graph";
         if (manual) {
           document.getElementById("vertices").hidden = true;
           document.getElementById("structure").hidden = false;
