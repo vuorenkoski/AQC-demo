@@ -30,16 +30,16 @@
           </div>
           <div class="row m-0">
             <div class="col-sm-9 text-box rounded-top p-3">
-              <p>This demo presents algorithms for solving certain graph problems using quantum annealer computer. Each problem is converted to QUBO which is then solved with three different type of D-Wave solvers: local simulator, quantum solvers and hybrid solver. </p>
+              <p>This demo presents algorithms for solving certain graph problems using quantum annealer computer. Each problem is converted to QUBO which is then solved with three different types of D-Wave solvers: local simulator, quantum solvers and hybrid solver. </p>
               <p>More information on the algorithms and implementation: <a href="http://urn.fi/URN:NBN:fi:hulib-202403131494" target="_blank">http://urn.fi/URN:NBN:fi:hulib-202403131494</a></p>
               <h2>Graph problems</h2>
               <ul>
-                <li>In the all pairs shortest path problem task is to find a path with minimum sum of the weights for every 
+                <li>In the All Pairs Shortest Path problem task is to find a path with the minimum sum of the weights for every 
                   pair of vertices in the graph.</li>
-                <li>The Graph isomorphism problem answers to the question are two graphs isomorphic. Two graphs are isomorphic if the graphs have same
+                <li>The Graph Isomorphism problem answers to the question are two graphs isomorphic. Two graphs are isomorphic if the graphs have the same
                   structure, meaning that the vertices from one graph can be mapped to the vertices of the other graph so that
                   the vertices have the same connectivity.</li>
-                  <li>The Community detection algorithm identifies communities from graphs, so that edges between vertices in the same community would be maximised and edges between vertices in different communities would be minimised.</li>
+                  <li>The Community Detection algorithm identifies communities from graphs so that edges between vertices in the same community would be maximised and edges between vertices in different communities would be minimised.</li>
               </ul>
               <h2>Graphs</h2>
               <p>The performance can be measured with variable types of graphs:</p>
@@ -61,24 +61,24 @@
                   Graph with single cycle: a graph in which part of the vertices and edges form a single cycle (here balanced binary tree with an additional edge from the last leaf to the index vertex is used).
                 </li>
                 <li>
-                  Graph with multiple cycles: a graph having multiple cycles (here balanced binary tree with with additional edges from every second leaf to the index vertex is used).
+                  Graph with multiple cycles: a graph having multiple cycles (here balanced binary tree with additional edges from every second leaf to the index vertex is used).
                 </li>
                 <li>
-                  Bipartite graph: a graph in which vertices can be divided in two sets so that all edges are between these two sets (here vertices are divided into even and odd vertices so that there are 2-4 edges from every even vertex to odd vertices).
+                  Bipartite graph: a graph in which vertices can be divided into two sets so that all edges are between these two sets (here vertices are divided into even and odd vertices so that there are 2-4 edges from every even vertex to odd vertices).
                 </li>
                 <li>
                   Wheel graph: a graph formed by connecting one vertex to all other vertices which together form a cycle.
                 </li>
                 <li>
-                  Random graph: Random Erdos-Renyi (binomial) graph is constructed by NetworkX gnp_random_graph function with probability for edge creation 0.3 and seed 42. Each edge has random weight 1...10.
+                  Random graph: Random Erdos-Renyi (binomial) graph is constructed by NetworkX gnp_random_graph function with probability for edge creation 0.3 and seed 42. Each edge has a random weight 1...10.
                 </li>
                 <li>
                   Community graph: A graph where vertices are divided into three (almost) equal-size groups. Every group is itself a complete subgraph in which each edge has a weight of 5. Two vertices from each group are connected (weight of 1) to two vertices in all other groups.  
                 </li>
                 <li>
-                  Manual graph: User can define the structure of the graph. Structure must be inserted as a single string. 
-                  Format of the string is "node1 node2 weight1, node3 node4 weight2,...". Nodes should be named from 0 to n-1, 
-                  where n is the number of nodes. The weights of edges must be positive. An example: "0 1 3, 0 2 5, 0 3 6, 2 3 1"
+                  Manual graph: The user can define the structure of the graph. The structure must be inserted as a single string. 
+                  The string format is "node1 node2 weight1, node3 node4 weight2,...". Nodes should be named from 0 to n-1, 
+                  where n is the number of nodes. The weights of the edges must be positive. An example: "0 1 3, 0 2 5, 0 3 6, 2 3 1"
                 </li>
               </ul>
               <p>For each of these graph types different size of graphs can be selected.</p>
