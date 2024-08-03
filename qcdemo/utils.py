@@ -56,7 +56,7 @@ def basic_stats(G,Q, bqm):
 
     # No negative weights
     for e in G.edges(data=True):
-        if e[2]['weight']<0:
+        if e[2]!={} and e[2]['weight']<0:
             raise Exception()
 
     # There must be atleast one edge and two vertices
